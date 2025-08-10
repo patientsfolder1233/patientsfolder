@@ -228,14 +228,6 @@ function PatientForm({ onSave, patient }) {
         </Grid>
         <TableContainer component={Paper} sx={{ mt: 2 }}>
           <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell>Lab Test Name</TableCell>
-                <TableCell>Lab Test Result</TableCell>
-                <TableCell>Lab Test Date</TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            </TableHead>
             <TableBody>
               {form.labTests.map((test, idx) => (
                 <TableRow key={idx}>
