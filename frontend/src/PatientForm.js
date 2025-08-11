@@ -28,8 +28,33 @@ const initialState = {
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const genders = ['Male', 'Female', 'Other'];
 
-function PatientForm({ onSave, patient }) {
-  const [form, setForm] = useState(patient || initialState);
+function PatientForm({ onSave, patient, onClear }) {
+  function normalizePatient(p) {
+    if (!p) return initialState;
+    // Accept both camelCase and snake_case fields from backend
+    return {
+      ...initialState,
+      firstName: p.firstName || p.first_name || '',
+      lastName: p.lastName || p.last_name || '',
+      gender: p.gender || '',
+      dob: p.dob || '',
+      contactNumber: p.contactNumber || p.contact_number || '',
+      email: p.email || '',
+      address: p.address || '',
+      bloodGroup: p.bloodGroup || p.blood_group || '',
+      currentMedications: Array.isArray(p.currentMedications) ? p.currentMedications : (Array.isArray(p.current_medications) ? p.current_medications : (typeof p.currentMedications === 'string' ? p.currentMedications.split(',') : (typeof p.current_medications === 'string' ? p.current_medications.split(',') : []))),
+      allergies: Array.isArray(p.allergies) ? p.allergies : (Array.isArray(p.allergies) ? p.allergies : (typeof p.allergies === 'string' ? p.allergies.split(',') : (typeof p.allergies === 'string' ? p.allergies.split(',') : []))),
+      pastSurgeries: Array.isArray(p.pastSurgeries) ? p.pastSurgeries : (Array.isArray(p.past_surgeries) ? p.past_surgeries : (typeof p.pastSurgeries === 'string' ? p.pastSurgeries.split(',') : (typeof p.past_surgeries === 'string' ? p.past_surgeries.split(',') : []))),
+      chronicDiseases: Array.isArray(p.chronicDiseases) ? p.chronicDiseases : (Array.isArray(p.chronic_diseases) ? p.chronic_diseases : (typeof p.chronicDiseases === 'string' ? p.chronicDiseases.split(',') : (typeof p.chronic_diseases === 'string' ? p.chronic_diseases.split(',') : []))),
+      labTests: Array.isArray(p.labTests) ? p.labTests : (Array.isArray(p.lab_tests) ? p.lab_tests : (typeof p.labTests === 'string' ? [] : (typeof p.lab_tests === 'string' ? [] : (p.labTests || p.lab_tests || [])))),
+      doctorNotes: typeof p.doctorNotes === 'object' && p.doctorNotes !== null ? p.doctorNotes : (typeof p.doctor_notes === 'object' && p.doctor_notes !== null ? p.doctor_notes : initialState.doctorNotes),
+    };
+  }
+  const [form, setForm] = useState(() => normalizePatient(patient));
+
+  React.useEffect(() => {
+    setForm(normalizePatient(patient));
+  }, [patient]);
   const [inputs, setInputs] = useState({
     medication: '',
     allergy: '',
@@ -82,8 +107,26 @@ function PatientForm({ onSave, patient }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(form);
+    // Ensure array fields are arrays
+    const patientData = {
+      ...form,
+      currentMedications: Array.isArray(form.currentMedications) ? form.currentMedications : (form.currentMedications ? form.currentMedications.split(',') : []),
+      allergies: Array.isArray(form.allergies) ? form.allergies : (form.allergies ? form.allergies.split(',') : []),
+      pastSurgeries: Array.isArray(form.pastSurgeries) ? form.pastSurgeries : (form.pastSurgeries ? form.pastSurgeries.split(',') : []),
+      chronicDiseases: Array.isArray(form.chronicDiseases) ? form.chronicDiseases : (form.chronicDiseases ? form.chronicDiseases.split(',') : []),
+      labTests: Array.isArray(form.labTests) ? form.labTests : (form.labTests ? form.labTests : []),
+    };
+    onSave(patientData);
     setForm(initialState);
+    setInputs({
+      medication: '',
+      allergy: '',
+      surgery: '',
+      disease: '',
+      labTestName: '',
+      labTestResult: '',
+      labTestDate: ''
+    });
   };
 
   return (
@@ -241,8 +284,8 @@ function PatientForm({ onSave, patient }) {
           </Table>
         </TableContainer>
         <Box display="flex" gap={2} mt={3}>
-          <Button type="submit" variant="contained" color="primary">Save</Button>
-          <Button type="button" variant="outlined" color="secondary" onClick={() => setForm(initialState)}>Clear</Button>
+          <Button type="button" variant="contained" color="primary" onClick={() => onSave(form)}>Save</Button>
+          <Button type="button" variant="outlined" color="secondary" onClick={onClear}>Clear</Button>
         </Box>
       </form>
     </Paper>

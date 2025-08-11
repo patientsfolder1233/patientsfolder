@@ -95,9 +95,30 @@ app.get('/patients', auth, async (req, res) => {
   }
   query += ` ORDER BY created_at DESC`;
   try {
+    console.log('GET /patients query:', query);
+    console.log('GET /patients params:', params);
     const result = await pool.query(query, params);
-    res.json(result.rows);
+    // Parse JSON fields for frontend
+    function safeParse(val, fallback) {
+      if (val === null || val === undefined || val === '') return fallback;
+      try {
+        return JSON.parse(val);
+      } catch {
+        return fallback;
+      }
+    }
+    const patients = result.rows.map(row => ({
+      ...row,
+      current_medications: safeParse(row.current_medications, []),
+      allergies: safeParse(row.allergies, []),
+      past_surgeries: safeParse(row.past_surgeries, []),
+      chronic_diseases: safeParse(row.chronic_diseases, []),
+      doctor_notes: safeParse(row.doctor_notes, {}),
+      lab_tests: safeParse(row.lab_tests, []),
+    }));
+    res.json(patients);
   } catch (error) {
+    console.error('GET /patients error:', error);
     res.status(400).json({ error: error.message });
   }
 });

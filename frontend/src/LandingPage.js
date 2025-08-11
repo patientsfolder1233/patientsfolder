@@ -39,6 +39,7 @@ function LandingPage({ onLogin }) {
         return;
       }
       if (res.ok && data.token) {
+        localStorage.setItem('token', data.token);
         onLogin(data.token);
       } else {
         setError(data.error || 'Login failed');
