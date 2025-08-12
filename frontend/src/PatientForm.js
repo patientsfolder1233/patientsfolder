@@ -203,7 +203,16 @@ function PatientForm({ onSave, patient, onClear }) {
             </FormControl>
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Date of Birth" name="dob" type="date" value={form.dob} onChange={handleChange} InputLabelProps={{ shrink: true }} required fullWidth />
+            <TextField
+              label="Date of Birth"
+              name="dob"
+              type="date"
+              value={form.dob}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              required
+              fullWidth
+            />
           </Grid>
           <Grid item xs={12}>
             <TextField label="Address" name="address" value={form.address} onChange={handleChange} required fullWidth />
@@ -349,7 +358,15 @@ function PatientForm({ onSave, patient, onClear }) {
         <Typography variant="h6" gutterBottom>Doctor's Notes</Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={3}>
-            <TextField label="Visit Date" name="visitDate" type="date" value={form.doctorNotes.visitDate} onChange={handleDoctorNotesChange} InputLabelProps={{ shrink: true }} fullWidth />
+            <TextField
+              label="Visit Date"
+              name="visitDate"
+              type="date"
+              value={form.doctorNotes.visitDate}
+              onChange={handleDoctorNotesChange}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
           </Grid>
           <Grid item xs={12} sm={3}>
             <TextField label="Doctor Name" name="doctorName" value={form.doctorNotes.doctorName} onChange={handleDoctorNotesChange} fullWidth />
@@ -371,7 +388,15 @@ function PatientForm({ onSave, patient, onClear }) {
             <TextField label="Lab Test Result" size="small" value={inputs.labTestResult} onChange={e => setInputs({ ...inputs, labTestResult: e.target.value })} fullWidth />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField label="Lab Test Date" size="small" type="datetime-local" value={inputs.labTestDate} onChange={e => setInputs({ ...inputs, labTestDate: e.target.value })} InputLabelProps={{ shrink: true }} fullWidth />
+            <TextField
+              label="Lab Test Date"
+              size="small"
+              type="date"
+              value={inputs.labTestDate}
+              onChange={e => setInputs({ ...inputs, labTestDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+            />
           </Grid>
           <Grid item xs={12} sm={1}>
             <IconButton color="primary" onClick={handleAddLabTest}><AddCircleOutlineIcon /></IconButton>

@@ -263,10 +263,11 @@ function App() {
           />
           <TextField
             label="Search by DOB"
+            type="date"
             value={searchDob}
             onChange={e => setSearchDob(e.target.value)}
             size="small"
-            placeholder="YYYY-MM-DD"
+            InputLabelProps={{ shrink: true }}
             sx={{ minWidth: 140 }}
           />
           <Button variant="outlined" startIcon={<SearchIcon />} onClick={fetchPatients} sx={{ fontWeight: 700 }}>Search</Button>
