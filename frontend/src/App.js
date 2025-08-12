@@ -8,6 +8,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 function App() {
+  const [notFound, setNotFound] = useState(false);
+  const [foundSuccess, setFoundSuccess] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
@@ -72,6 +74,13 @@ function App() {
         });
         setEditingIdx(0);
         setFormKey(formKey + 1);
+        setFoundSuccess(true);
+        setTimeout(() => setFoundSuccess(false), 1500);
+      }
+      // Show not found if any search field is used and no results
+      if ((searchName || searchDob) && res.data.length === 0) {
+        setNotFound(true);
+        setTimeout(() => setNotFound(false), 1500);
       }
     } catch (err) {
       // Optionally show error to user
@@ -215,6 +224,75 @@ function App() {
             <span className="loader" style={{ width: 48, height: 48, border: '6px solid #1976d2', borderRadius: '50%', borderTop: '6px solid #fff', animation: 'spin 1s linear infinite', display: 'inline-block' }}></span>
           </Box>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }`}</style>
+        </Box>
+      )}
+      {foundSuccess && (
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          bgcolor: 'rgba(255,255,255,0.7)',
+          backdropFilter: 'blur(6px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Box display="flex" flexDirection="column" alignItems="center">
+            <span style={{
+              display: 'inline-block',
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              background: '#4caf50',
+              boxShadow: '0 2px 8px rgba(76,175,80,0.2)',
+              marginBottom: 16,
+              position: 'relative',
+            }}>
+              <svg viewBox="0 0 24 24" style={{ position: 'absolute', top: 12, left: 12, width: 40, height: 40 }}>
+                <circle cx="12" cy="12" r="12" fill="#4caf50" />
+                <polyline points="7,13 11,17 17,9" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <Typography variant="h5" color="success.main" mb={2} fontWeight={700} letterSpacing={1}>Found!</Typography>
+          </Box>
+        </Box>
+      )}
+      {notFound && (
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          bgcolor: 'rgba(255,255,255,0.7)',
+          backdropFilter: 'blur(6px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Box display="flex" flexDirection="column" alignItems="center">
+            <span style={{
+              display: 'inline-block',
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              background: '#f44336',
+              boxShadow: '0 2px 8px rgba(244,67,54,0.2)',
+              marginBottom: 16,
+              position: 'relative',
+            }}>
+              <svg viewBox="0 0 24 24" style={{ position: 'absolute', top: 12, left: 12, width: 40, height: 40 }}>
+                <circle cx="12" cy="12" r="12" fill="#f44336" />
+                <line x1="8" y1="8" x2="16" y2="16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+                <line x1="16" y1="8" x2="8" y2="16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </span>
+            <Typography variant="h5" color="error" mb={2} fontWeight={700} letterSpacing={1}>Not found</Typography>
+          </Box>
         </Box>
       )}
       {saveSuccess && (
