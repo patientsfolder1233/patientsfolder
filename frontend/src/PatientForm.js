@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Grid, Paper, Typography, TextField, Button, Select, MenuItem, InputLabel, FormControl, Divider, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
+import { Box, Grid, Paper, Typography, TextField, Button, Select, MenuItem, InputLabel, FormControl, Divider, IconButton, Chip, Tooltip, Card, CardContent } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
+import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 const initialState = {
   firstName: '',
@@ -29,6 +30,14 @@ const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const genders = ['Male', 'Female', 'Other'];
 
 function PatientForm({ onSave, patient, onClear }) {
+  // For chip overflow
+  const CHIP_DISPLAY_LIMIT = 3;
+  const [showAllChips, setShowAllChips] = useState({
+    currentMedications: false,
+    allergies: false,
+    pastSurgeries: false,
+    chronicDiseases: false,
+  });
   const [saveWarning, setSaveWarning] = useState('');
   function normalizePatient(p) {
     if (!p) return initialState;
@@ -213,66 +222,126 @@ function PatientForm({ onSave, patient, onClear }) {
           </Grid>
           <Grid item xs={12} sm={8}>
             <Box display="flex" gap={2}>
+              {/* Chips for Medications */}
               <Box flex={1}>
                 <Typography variant="subtitle2">Current Medications</Typography>
-                <Box display="flex" gap={1}>
+                <Box display="flex" gap={1} alignItems="center">
                   <TextField size="small" value={inputs.medication} onChange={e => setInputs({ ...inputs, medication: e.target.value })} placeholder="Add medication" />
                   <IconButton color="primary" onClick={() => handleAddList('currentMedications', inputs.medication)}><AddCircleOutlineIcon /></IconButton>
                 </Box>
-                <Box mt={1}>
-                  {form.currentMedications.map((m, idx) => (
-                    <Box key={idx} display="flex" alignItems="center" gap={1}>
-                      <Typography>{m}</Typography>
-                      <IconButton size="small" onClick={() => handleDeleteList('currentMedications', idx)}><DeleteIcon fontSize="small" /></IconButton>
-                    </Box>
+                <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
+                  {(showAllChips.currentMedications ? form.currentMedications : form.currentMedications.slice(0, CHIP_DISPLAY_LIMIT)).map((m, idx) => (
+                    <Chip key={idx} label={m} onDelete={() => handleDeleteList('currentMedications', idx)} color="primary" />
                   ))}
+                  {form.currentMedications.length > CHIP_DISPLAY_LIMIT && !showAllChips.currentMedications && (
+                    <Tooltip title={form.currentMedications.slice(CHIP_DISPLAY_LIMIT).join(', ')}>
+                      <Chip
+                        icon={<MoreHorizIcon />}
+                        label={`+${form.currentMedications.length - CHIP_DISPLAY_LIMIT} more`}
+                        onClick={() => setShowAllChips({ ...showAllChips, currentMedications: true })}
+                        color="default"
+                      />
+                    </Tooltip>
+                  )}
+                  {form.currentMedications.length > CHIP_DISPLAY_LIMIT && showAllChips.currentMedications && (
+                    <Chip
+                      label="Show less"
+                      onClick={() => setShowAllChips({ ...showAllChips, currentMedications: false })}
+                      color="default"
+                    />
+                  )}
                 </Box>
               </Box>
+              {/* Chips for Allergies */}
               <Box flex={1}>
                 <Typography variant="subtitle2">Allergies</Typography>
-                <Box display="flex" gap={1}>
+                <Box display="flex" gap={1} alignItems="center">
                   <TextField size="small" value={inputs.allergy} onChange={e => setInputs({ ...inputs, allergy: e.target.value })} placeholder="Add allergy" />
                   <IconButton color="primary" onClick={() => handleAddList('allergies', inputs.allergy)}><AddCircleOutlineIcon /></IconButton>
                 </Box>
-                <Box mt={1}>
-                  {form.allergies.map((a, idx) => (
-                    <Box key={idx} display="flex" alignItems="center" gap={1}>
-                      <Typography>{a}</Typography>
-                      <IconButton size="small" onClick={() => handleDeleteList('allergies', idx)}><DeleteIcon fontSize="small" /></IconButton>
-                    </Box>
+                <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
+                  {(showAllChips.allergies ? form.allergies : form.allergies.slice(0, CHIP_DISPLAY_LIMIT)).map((a, idx) => (
+                    <Chip key={idx} label={a} onDelete={() => handleDeleteList('allergies', idx)} color="primary" />
                   ))}
+                  {form.allergies.length > CHIP_DISPLAY_LIMIT && !showAllChips.allergies && (
+                    <Tooltip title={form.allergies.slice(CHIP_DISPLAY_LIMIT).join(', ')}>
+                      <Chip
+                        icon={<MoreHorizIcon />}
+                        label={`+${form.allergies.length - CHIP_DISPLAY_LIMIT} more`}
+                        onClick={() => setShowAllChips({ ...showAllChips, allergies: true })}
+                        color="default"
+                      />
+                    </Tooltip>
+                  )}
+                  {form.allergies.length > CHIP_DISPLAY_LIMIT && showAllChips.allergies && (
+                    <Chip
+                      label="Show less"
+                      onClick={() => setShowAllChips({ ...showAllChips, allergies: false })}
+                      color="default"
+                    />
+                  )}
                 </Box>
               </Box>
             </Box>
           </Grid>
+          {/* Chips for Surgeries */}
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2">Past Surgeries</Typography>
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={1} alignItems="center">
               <TextField size="small" value={inputs.surgery} onChange={e => setInputs({ ...inputs, surgery: e.target.value })} placeholder="Add surgery" />
               <IconButton color="primary" onClick={() => handleAddList('pastSurgeries', inputs.surgery)}><AddCircleOutlineIcon /></IconButton>
             </Box>
-            <Box mt={1}>
-              {form.pastSurgeries.map((s, idx) => (
-                <Box key={idx} display="flex" alignItems="center" gap={1}>
-                  <Typography>{s}</Typography>
-                  <IconButton size="small" onClick={() => handleDeleteList('pastSurgeries', idx)}><DeleteIcon fontSize="small" /></IconButton>
-                </Box>
+            <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
+              {(showAllChips.pastSurgeries ? form.pastSurgeries : form.pastSurgeries.slice(0, CHIP_DISPLAY_LIMIT)).map((s, idx) => (
+                <Chip key={idx} label={s} onDelete={() => handleDeleteList('pastSurgeries', idx)} color="primary" />
               ))}
+              {form.pastSurgeries.length > CHIP_DISPLAY_LIMIT && !showAllChips.pastSurgeries && (
+                <Tooltip title={form.pastSurgeries.slice(CHIP_DISPLAY_LIMIT).join(', ')}>
+                  <Chip
+                    icon={<MoreHorizIcon />}
+                    label={`+${form.pastSurgeries.length - CHIP_DISPLAY_LIMIT} more`}
+                    onClick={() => setShowAllChips({ ...showAllChips, pastSurgeries: true })}
+                    color="default"
+                  />
+                </Tooltip>
+              )}
+              {form.pastSurgeries.length > CHIP_DISPLAY_LIMIT && showAllChips.pastSurgeries && (
+                <Chip
+                  label="Show less"
+                  onClick={() => setShowAllChips({ ...showAllChips, pastSurgeries: false })}
+                  color="default"
+                />
+              )}
             </Box>
           </Grid>
+          {/* Chips for Diseases */}
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2">Chronic Diseases</Typography>
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={1} alignItems="center">
               <TextField size="small" value={inputs.disease} onChange={e => setInputs({ ...inputs, disease: e.target.value })} placeholder="Add disease" />
               <IconButton color="primary" onClick={() => handleAddList('chronicDiseases', inputs.disease)}><AddCircleOutlineIcon /></IconButton>
             </Box>
-            <Box mt={1}>
-              {form.chronicDiseases.map((d, idx) => (
-                <Box key={idx} display="flex" alignItems="center" gap={1}>
-                  <Typography>{d}</Typography>
-                  <IconButton size="small" onClick={() => handleDeleteList('chronicDiseases', idx)}><DeleteIcon fontSize="small" /></IconButton>
-                </Box>
+            <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
+              {(showAllChips.chronicDiseases ? form.chronicDiseases : form.chronicDiseases.slice(0, CHIP_DISPLAY_LIMIT)).map((d, idx) => (
+                <Chip key={idx} label={d} onDelete={() => handleDeleteList('chronicDiseases', idx)} color="primary" />
               ))}
+              {form.chronicDiseases.length > CHIP_DISPLAY_LIMIT && !showAllChips.chronicDiseases && (
+                <Tooltip title={form.chronicDiseases.slice(CHIP_DISPLAY_LIMIT).join(', ')}>
+                  <Chip
+                    icon={<MoreHorizIcon />}
+                    label={`+${form.chronicDiseases.length - CHIP_DISPLAY_LIMIT} more`}
+                    onClick={() => setShowAllChips({ ...showAllChips, chronicDiseases: true })}
+                    color="default"
+                  />
+                </Tooltip>
+              )}
+              {form.chronicDiseases.length > CHIP_DISPLAY_LIMIT && showAllChips.chronicDiseases && (
+                <Chip
+                  label="Show less"
+                  onClick={() => setShowAllChips({ ...showAllChips, chronicDiseases: false })}
+                  color="default"
+                />
+              )}
             </Box>
           </Grid>
         </Grid>
@@ -308,20 +377,26 @@ function PatientForm({ onSave, patient, onClear }) {
             <IconButton color="primary" onClick={handleAddLabTest}><AddCircleOutlineIcon /></IconButton>
           </Grid>
         </Grid>
-        <TableContainer component={Paper} sx={{ mt: 2 }}>
-          <Table size="small">
-            <TableBody>
-              {form.labTests.map((test, idx) => (
-                <TableRow key={idx}>
-                  <TableCell>{test.name}</TableCell>
-                  <TableCell>{test.result}</TableCell>
-                  <TableCell>{test.date}</TableCell>
-                  <TableCell><IconButton size="small" onClick={() => handleDeleteLabTest(idx)}><DeleteIcon fontSize="small" /></IconButton></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+          {form.labTests.map((test, idx) => (
+            <Card key={idx} sx={{ minWidth: 220, boxShadow: 2, borderRadius: 2, position: 'relative' }}>
+              <CardContent>
+                <Typography variant="subtitle2" color="primary" fontWeight={700} gutterBottom>
+                  {test.name}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Result: {test.result}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Date: {test.date}
+                </Typography>
+                <IconButton size="small" sx={{ position: 'absolute', top: 8, right: 8 }} onClick={() => handleDeleteLabTest(idx)}>
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
         {saveWarning && (
           <Typography color="error" variant="body2" mb={2}>{saveWarning}</Typography>
         )}
