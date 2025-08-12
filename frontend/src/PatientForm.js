@@ -29,25 +29,26 @@ const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 const genders = ['Male', 'Female', 'Other'];
 
 function PatientForm({ onSave, patient, onClear }) {
+  const [saveWarning, setSaveWarning] = useState('');
   function normalizePatient(p) {
     if (!p) return initialState;
-    // Accept both camelCase and snake_case fields from backend
+    // Backend now returns only camelCase fields
     return {
       ...initialState,
-      firstName: p.firstName || p.first_name || '',
-      lastName: p.lastName || p.last_name || '',
+      firstName: p.firstName || '',
+      lastName: p.lastName || '',
       gender: p.gender || '',
       dob: p.dob || '',
-      contactNumber: p.contactNumber || p.contact_number || '',
+      contactNumber: p.contactNumber || '',
       email: p.email || '',
       address: p.address || '',
-      bloodGroup: p.bloodGroup || p.blood_group || '',
-      currentMedications: Array.isArray(p.currentMedications) ? p.currentMedications : (Array.isArray(p.current_medications) ? p.current_medications : (typeof p.currentMedications === 'string' ? p.currentMedications.split(',') : (typeof p.current_medications === 'string' ? p.current_medications.split(',') : []))),
-      allergies: Array.isArray(p.allergies) ? p.allergies : (Array.isArray(p.allergies) ? p.allergies : (typeof p.allergies === 'string' ? p.allergies.split(',') : (typeof p.allergies === 'string' ? p.allergies.split(',') : []))),
-      pastSurgeries: Array.isArray(p.pastSurgeries) ? p.pastSurgeries : (Array.isArray(p.past_surgeries) ? p.past_surgeries : (typeof p.pastSurgeries === 'string' ? p.pastSurgeries.split(',') : (typeof p.past_surgeries === 'string' ? p.past_surgeries.split(',') : []))),
-      chronicDiseases: Array.isArray(p.chronicDiseases) ? p.chronicDiseases : (Array.isArray(p.chronic_diseases) ? p.chronic_diseases : (typeof p.chronicDiseases === 'string' ? p.chronicDiseases.split(',') : (typeof p.chronic_diseases === 'string' ? p.chronic_diseases.split(',') : []))),
-      labTests: Array.isArray(p.labTests) ? p.labTests : (Array.isArray(p.lab_tests) ? p.lab_tests : (typeof p.labTests === 'string' ? [] : (typeof p.lab_tests === 'string' ? [] : (p.labTests || p.lab_tests || [])))),
-      doctorNotes: typeof p.doctorNotes === 'object' && p.doctorNotes !== null ? p.doctorNotes : (typeof p.doctor_notes === 'object' && p.doctor_notes !== null ? p.doctor_notes : initialState.doctorNotes),
+      bloodGroup: p.bloodGroup || '',
+      currentMedications: Array.isArray(p.currentMedications) ? p.currentMedications : [],
+      allergies: Array.isArray(p.allergies) ? p.allergies : [],
+      pastSurgeries: Array.isArray(p.pastSurgeries) ? p.pastSurgeries : [],
+      chronicDiseases: Array.isArray(p.chronicDiseases) ? p.chronicDiseases : [],
+      labTests: Array.isArray(p.labTests) ? p.labTests : [],
+      doctorNotes: typeof p.doctorNotes === 'object' && p.doctorNotes !== null ? p.doctorNotes : initialState.doctorNotes,
     };
   }
   const [form, setForm] = useState(() => normalizePatient(patient));
@@ -107,14 +108,52 @@ function PatientForm({ onSave, patient, onClear }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Ensure array fields are arrays
+    // Validate required fields
+    const requiredFields = [
+      form.firstName,
+      form.lastName,
+      form.gender,
+      form.dob,
+      form.contactNumber,
+      form.address
+    ];
+    if (requiredFields.some(f => !f || f.trim() === '')) {
+      setSaveWarning('Please fill all required fields before saving.');
+      return;
+    }
+    setSaveWarning('');
+    // Robust: always include any text in array input fields in the saved arrays
+    const addIfNotEmpty = (arr, val) => {
+      if (val && val.trim() !== '') return [...arr, val.trim()];
+      return arr;
+    };
+    const currentMedications = addIfNotEmpty(form.currentMedications, inputs.medication);
+    const allergies = addIfNotEmpty(form.allergies, inputs.allergy);
+    const pastSurgeries = addIfNotEmpty(form.pastSurgeries, inputs.surgery);
+    const chronicDiseases = addIfNotEmpty(form.chronicDiseases, inputs.disease);
+    let labTests = Array.isArray(form.labTests) ? [...form.labTests] : [];
+    if (inputs.labTestName && inputs.labTestResult && inputs.labTestDate) {
+      labTests = [...labTests, {
+        name: inputs.labTestName.trim(),
+        result: inputs.labTestResult.trim(),
+        date: inputs.labTestDate
+      }];
+    }
     const patientData = {
-      ...form,
-      currentMedications: Array.isArray(form.currentMedications) ? form.currentMedications : (form.currentMedications ? form.currentMedications.split(',') : []),
-      allergies: Array.isArray(form.allergies) ? form.allergies : (form.allergies ? form.allergies.split(',') : []),
-      pastSurgeries: Array.isArray(form.pastSurgeries) ? form.pastSurgeries : (form.pastSurgeries ? form.pastSurgeries.split(',') : []),
-      chronicDiseases: Array.isArray(form.chronicDiseases) ? form.chronicDiseases : (form.chronicDiseases ? form.chronicDiseases.split(',') : []),
-      labTests: Array.isArray(form.labTests) ? form.labTests : (form.labTests ? form.labTests : []),
+      firstName: form.firstName || '',
+      lastName: form.lastName || '',
+      gender: form.gender || '',
+      dob: form.dob || '',
+      contactNumber: form.contactNumber || '',
+      email: form.email || '',
+      address: form.address || '',
+      bloodGroup: form.bloodGroup || '',
+      currentMedications,
+      allergies,
+      pastSurgeries,
+      chronicDiseases,
+      doctorNotes: typeof form.doctorNotes === 'object' && form.doctorNotes !== null ? form.doctorNotes : { visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' },
+      labTests,
     };
     onSave(patientData);
     setForm(initialState);
@@ -283,8 +322,26 @@ function PatientForm({ onSave, patient, onClear }) {
             </TableBody>
           </Table>
         </TableContainer>
+        {saveWarning && (
+          <Typography color="error" variant="body2" mb={2}>{saveWarning}</Typography>
+        )}
         <Box display="flex" gap={2} mt={3}>
-          <Button type="button" variant="contained" color="primary" onClick={() => onSave(form)}>Save</Button>
+          <Button
+            type="button"
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+            disabled={[
+              form.firstName,
+              form.lastName,
+              form.gender,
+              form.dob,
+              form.contactNumber,
+              form.address
+            ].some(f => !f || f.trim() === '')}
+          >
+            Save
+          </Button>
           <Button type="button" variant="outlined" color="secondary" onClick={onClear}>Clear</Button>
         </Box>
       </form>

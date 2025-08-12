@@ -14,6 +14,8 @@ function App() {
   const [pendingSaveData, setPendingSaveData] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [patients, setPatients] = useState([]);
   const [searchName, setSearchName] = useState(''); 
   const [searchDob, setSearchDob] = useState('');
@@ -44,37 +46,29 @@ function App() {
       const res = await axios.get('http://localhost:5000/patients?' + params.toString(), {
         headers: { Authorization: `Bearer ${token}` }
       });
+      console.log('DEBUG: Patient data from backend:', res.data);
       setPatients(res.data);
       // If searching by name and dob, auto-fill form with first match
       if (searchName && searchDob && res.data.length > 0) {
         const p = res.data[0];
-        // Defensive: ensure arrays and nested objects are always correct
-        const doctorNotes = typeof p.doctor_notes === 'object' && p.doctor_notes !== null ? p.doctor_notes : { visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' };
-        const labTests = Array.isArray(p.lab_tests) ? p.lab_tests : [];
+        console.log('DEBUG: First patient for form:', p);
+        const safeArr = val => Array.isArray(val) ? val : (typeof val === 'string' && val.trim().startsWith('[') ? JSON.parse(val) : []);
+        const safeObj = val => (typeof val === 'object' && val !== null) ? val : (typeof val === 'string' && val.trim().startsWith('{') ? JSON.parse(val) : { visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' });
         setFormPatient({
-          firstName: p.first_name || '',
-          lastName: p.last_name || '',
+          firstName: p.firstName || '',
+          lastName: p.lastName || '',
           gender: p.gender || '',
-          dob: p.dob ? (typeof p.dob === 'string' ? p.dob.split('T')[0] : new Date(p.dob).toISOString().split('T')[0]) : '',
-          contactNumber: p.contact_number || '',
+          dob: p.dob ? p.dob.split('T')[0] : '',
+          contactNumber: p.contactNumber || '',
           email: p.email || '',
           address: p.address || '',
-          bloodGroup: p.blood_group || '',
-          currentMedications: Array.isArray(p.current_medications) ? p.current_medications : [],
-          allergies: Array.isArray(p.allergies) ? p.allergies : [],
-          pastSurgeries: Array.isArray(p.past_surgeries) ? p.past_surgeries : [],
-          chronicDiseases: Array.isArray(p.chronic_diseases) ? p.chronic_diseases : [],
-          doctorNotes: {
-            visitDate: doctorNotes.visitDate || '',
-            doctorName: doctorNotes.doctorName || '',
-            diagnosis: doctorNotes.diagnosis || '',
-            treatmentPlan: doctorNotes.treatmentPlan || '',
-          },
-          labTests: labTests.map(test => ({
-            name: test.name || '',
-            result: test.result || '',
-            date: test.date ? (typeof test.date === 'string' ? test.date.split('T')[0] : new Date(test.date).toISOString().slice(0,16)) : '',
-          })),
+          bloodGroup: p.bloodGroup || '',
+          currentMedications: safeArr(p.currentMedications),
+          allergies: safeArr(p.allergies),
+          pastSurgeries: safeArr(p.pastSurgeries),
+          chronicDiseases: safeArr(p.chronicDiseases),
+          doctorNotes: safeObj(p.doctorNotes),
+          labTests: safeArr(p.labTests),
         });
         setEditingIdx(0);
         setFormKey(formKey + 1);
@@ -100,20 +94,29 @@ function App() {
 
   const confirmSave = async () => {
     if (!token) return;
-    if (editingIdx !== null) {
-      const updated = [...patients];
-      updated[editingIdx] = pendingSaveData;
-      setPatients(updated);
-      setEditingIdx(null);
-      setFormPatient(null);
-    } else {
-      await axios.post('http://localhost:5000/patients', pendingSaveData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchPatients();
+    setSaving(true);
+    setSaveSuccess(false);
+    try {
+      if (editingIdx !== null) {
+        const updated = [...patients];
+        updated[editingIdx] = pendingSaveData;
+        setPatients(updated);
+        setEditingIdx(null);
+        setFormPatient(null);
+      } else {
+        await axios.post('http://localhost:5000/patients', pendingSaveData, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        await fetchPatients();
+      }
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    } catch {
+      // Optionally show error
     }
     setSaveDialogOpen(false);
     setPendingSaveData(null);
+    setSaving(false);
   };
 
   const handleEdit = (idx) => {
@@ -193,7 +196,7 @@ function App() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4, position: 'relative' }}>
-      {loading && (
+      {(loading || saving) && (
         <Box sx={{
           position: 'absolute',
           top: 0,
@@ -208,10 +211,44 @@ function App() {
           justifyContent: 'center',
         }}>
           <Box display="flex" flexDirection="column" alignItems="center">
-            <Typography variant="h5" color="primary" mb={2}>Searching...</Typography>
+            <Typography variant="h5" color="primary" mb={2}>{saving ? 'Saving...' : 'Searching...'}</Typography>
             <span className="loader" style={{ width: 48, height: 48, border: '6px solid #1976d2', borderRadius: '50%', borderTop: '6px solid #fff', animation: 'spin 1s linear infinite', display: 'inline-block' }}></span>
           </Box>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);} }`}</style>
+        </Box>
+      )}
+      {saveSuccess && (
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          bgcolor: 'rgba(255,255,255,0.7)',
+          backdropFilter: 'blur(6px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Box display="flex" flexDirection="column" alignItems="center">
+            <span style={{
+              display: 'inline-block',
+              width: 64,
+              height: 64,
+              borderRadius: '50%',
+              background: '#4caf50',
+              boxShadow: '0 2px 8px rgba(76,175,80,0.2)',
+              marginBottom: 16,
+              position: 'relative',
+            }}>
+              <svg viewBox="0 0 24 24" style={{ position: 'absolute', top: 12, left: 12, width: 40, height: 40 }}>
+                <circle cx="12" cy="12" r="12" fill="#4caf50" />
+                <polyline points="7,13 11,17 17,9" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <Typography variant="h5" color="success.main" mb={2} fontWeight={700} letterSpacing={1}>Saved!</Typography>
+          </Box>
         </Box>
       )}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>

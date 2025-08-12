@@ -1,3 +1,4 @@
+
 import express from 'express';
 import cors from 'cors';
 import { Pool } from 'pg';
@@ -16,6 +17,20 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// Utility: convert snake_case to camelCase for frontend
+function toCamel(obj) {
+  if (Array.isArray(obj)) return obj.map(toCamel);
+  if (obj && typeof obj === 'object') {
+    const newObj = {};
+    for (const key in obj) {
+      const camel = key.replace(/_([a-z])/g, g => g[1].toUpperCase());
+      newObj[camel] = toCamel(obj[key]);
+    }
+    return newObj;
+  }
+  return obj;
+}
+
 // Registration endpoint
 app.post('/register', async (req, res) => {
   const { username, password, clinic_name } = req.body;
@@ -25,7 +40,7 @@ app.post('/register', async (req, res) => {
       'INSERT INTO users (username, password_hash, clinic_name) VALUES ($1, $2, $3) RETURNING *',
       [username, password_hash, clinic_name]
     );
-    res.status(201).json({ message: 'User registered', user: result.rows[0] });
+    res.status(201).json({ message: 'User registered', user: toCamel(result.rows[0]) });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -62,16 +77,16 @@ app.post('/patients', auth, async (req, res) => {
   try {
     const result = await pool.query(
       `INSERT INTO patients (
-        first_name, last_name, gender, dob, contact_number, email, address, blood_group,
-        current_medications, allergies, past_surgeries, chronic_diseases, doctor_notes, lab_tests, clinic_id
+        "clinicId", "firstName", "lastName", "gender", "dob", "contactNumber", "email", "address", "bloodGroup",
+        "currentMedications", "allergies", "pastSurgeries", "chronicDiseases", "doctorNotes", "labTests", "createdAt"
       ) VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16
       ) RETURNING *`,
       [
-        p.firstName, p.lastName, p.gender, p.dob, p.contactNumber, p.email, p.address, p.bloodGroup,
+        clinic_id, p.firstName, p.lastName, p.gender, p.dob, p.contactNumber, p.email, p.address, p.bloodGroup,
         JSON.stringify(p.currentMedications), JSON.stringify(p.allergies), JSON.stringify(p.pastSurgeries),
         JSON.stringify(p.chronicDiseases), JSON.stringify(p.doctorNotes), JSON.stringify(p.labTests),
-        clinic_id
+        new Date().toISOString()
       ]
     );
     res.status(201).json(result.rows[0]);
@@ -83,20 +98,21 @@ app.post('/patients', auth, async (req, res) => {
 app.get('/patients', auth, async (req, res) => {
   const clinic_id = req.user.userId;
   const { name, dob } = req.query;
-  let query = `SELECT * FROM patients WHERE clinic_id = $1`;
+  let query = `SELECT * FROM patients WHERE "clinicId" = $1`;
   let params = [clinic_id];
+  let paramIdx = 2;
   if (name) {
-    query += ` AND (LOWER(first_name || ' ' || last_name) LIKE $2)`;
-    params.push(`%${name.toLowerCase()}%`);
+    query += ` AND (LOWER(TRIM("firstName") || ' ' || TRIM("lastName")) LIKE $${paramIdx})`;
+    params.push(`%${name.trim().toLowerCase()}%`);
+    paramIdx++;
   }
   if (dob) {
-    query += name ? ` AND dob = $3` : ` AND dob = $2`;
+    query += ` AND "dob" = $${paramIdx}`;
     params.push(dob);
+    paramIdx++;
   }
-  query += ` ORDER BY created_at DESC`;
+  query += ` ORDER BY "createdAt" DESC`;
   try {
-    console.log('GET /patients query:', query);
-    console.log('GET /patients params:', params);
     const result = await pool.query(query, params);
     // Parse JSON fields for frontend
     function safeParse(val, fallback) {
@@ -107,21 +123,33 @@ app.get('/patients', auth, async (req, res) => {
         return fallback;
       }
     }
-    const patients = result.rows.map(row => ({
-      ...row,
-      current_medications: safeParse(row.current_medications, []),
-      allergies: safeParse(row.allergies, []),
-      past_surgeries: safeParse(row.past_surgeries, []),
-      chronic_diseases: safeParse(row.chronic_diseases, []),
-      doctor_notes: safeParse(row.doctor_notes, {}),
-      lab_tests: safeParse(row.lab_tests, []),
-    }));
+    const patients = result.rows.map(row => {
+      function parseField(val, fallback) {
+        if (val === null || val === undefined) return fallback;
+        if (typeof val === 'string') {
+          try {
+            return JSON.parse(val);
+          } catch {
+            return fallback;
+          }
+        }
+        return val;
+      }
+      return {
+        ...row,
+        currentMedications: parseField(row.currentMedications, []),
+        allergies: parseField(row.allergies, []),
+        pastSurgeries: parseField(row.pastSurgeries, []),
+        chronicDiseases: parseField(row.chronicDiseases, []),
+        doctorNotes: parseField(row.doctorNotes, {}),
+        labTests: parseField(row.labTests, []),
+      };
+    });
     res.json(patients);
   } catch (error) {
-    console.error('GET /patients error:', error);
     res.status(400).json({ error: error.message });
   }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`\u2705 Server running on port ${PORT}`));
