@@ -27,6 +27,7 @@ function App() {
   const [formKey, setFormKey] = useState(0);
   const [clinicName, setClinicName] = useState('');
   const [editingPatient, setEditingPatient] = useState(null);
+  const [saveMessage, setSaveMessage] = useState('');
 
   // Fetch clinic name from token after login
   React.useEffect(() => {
@@ -111,26 +112,26 @@ function App() {
     setSaveDialogOpen(false);
     setSaveSuccess(false);
     setSaveError('');
+    let saveMsg = '';
     try {
-      // Only create new record if there is NO id
       if (editingPatient && editingPatient.id) {
         await axios.put(`http://localhost:5000/patients/${editingPatient.id}`, editingPatient, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setSaveSuccess(true);
-        setFormPatient(null); // Clear form only after successful save
+        saveMsg = 'Changes saved successfully!';
+        setFormPatient(null);
         setEditingIdx(null);
-        setTimeout(() => setSaveSuccess(false), 2000);
       } else {
-        // Create new record only if id is missing
         await axios.post('http://localhost:5000/patients', editingPatient, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setSaveSuccess(true);
-        setFormPatient(null); // Clear form only after successful save
+        saveMsg = 'Patient record created successfully!';
+        setFormPatient(null);
         setEditingIdx(null);
-        setTimeout(() => setSaveSuccess(false), 2000);
       }
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+      setSaveMessage(saveMsg);
     } catch (err) {
       setSaveError('Failed to save changes.');
       setTimeout(() => setSaveError(''), 2000);
@@ -414,7 +415,7 @@ function App() {
       {/* Success/Failure Message */}
       {saveSuccess && (
         <Box sx={{ position: 'fixed', top: 24, right: 24, bgcolor: 'success.main', color: '#fff', p: 2, borderRadius: 2, zIndex: 9999 }}>
-          <Typography>Changes saved successfully!</Typography>
+          <Typography>{saveMessage}</Typography>
         </Box>
       )}
       {saveError && (
