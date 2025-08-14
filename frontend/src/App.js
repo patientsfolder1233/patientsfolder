@@ -98,7 +98,8 @@ function App() {
     if (storedToken && !token) {
       setToken(storedToken);
     }
-    if (token) fetchPatients();
+    // Prevent auto-search on reload/login
+    // if (token) fetchPatients();
   }, [token]);
 
   // Called when user clicks Save in PatientForm
@@ -128,6 +129,9 @@ function App() {
         saveMsg = 'Patient record created successfully!';
         setFormPatient(null);
         setEditingIdx(null);
+        setPatients([]); // Clear all records after adding new patient
+        setSearchName('');
+        setSearchDob('');
       }
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);

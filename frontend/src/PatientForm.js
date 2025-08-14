@@ -176,13 +176,18 @@ function PatientForm({ onSave, patient, onClear }) {
 
   return (
     <Paper sx={{ p: 3, mb: 4, position: 'relative' }} elevation={4}>
-      {/* Modern Edit button at top-right with label */}
+      {/* Modern Edit button at top-right with label - entire button clickable */}
       {readOnly && (
-        <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 10, display: 'flex', alignItems: 'center', bgcolor: 'background.paper', boxShadow: 2, borderRadius: 2, px: 1 }}>
-          <IconButton color="primary" onClick={() => setEditDialogOpen(true)}>
-            <EditIcon />
-          </IconButton>
-          <Typography variant="button" color="primary" sx={{ ml: 1, fontWeight: 700 }}>Edit</Typography>
+        <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 10, px: 1 }}>
+          <Button
+            color="primary"
+            variant="outlined"
+            startIcon={<EditIcon />}
+            onClick={() => setEditDialogOpen(true)}
+            sx={{ fontWeight: 700, textTransform: 'none', borderRadius: 3, boxShadow: 0, bgcolor: 'transparent', '&:hover': { bgcolor: 'rgba(25, 118, 210, 0.08)' } }}
+          >
+            Edit
+          </Button>
         </Box>
       )}
       {/* Edit confirmation dialog */}
