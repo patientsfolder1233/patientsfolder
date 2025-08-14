@@ -113,6 +113,7 @@ function App() {
     setSaveDialogOpen(false);
     setSaveSuccess(false);
     setSaveError('');
+    setSaving(true); // Show saving overlay
     let saveMsg = '';
     try {
       if (editingPatient && editingPatient.id) {
@@ -141,6 +142,7 @@ function App() {
       setTimeout(() => setSaveError(''), 2000);
     }
     setEditingPatient(null);
+    setSaving(false); // Hide saving overlay
   };
 
   const handleEdit = (idx) => {
