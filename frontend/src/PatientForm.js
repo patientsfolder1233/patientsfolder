@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Box, Grid, Paper, Typography, TextField, Button, Select, MenuItem, InputLabel, FormControl, Divider, IconButton, Chip, Tooltip, Card, CardContent } from '@mui/material';
+import { Box, Grid, Paper, Typography, TextField, Button, Select, MenuItem, InputLabel, FormControl, Divider, IconButton, Chip, Tooltip, Card, CardContent, Dialog } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import EditIcon from '@mui/icons-material/Edit';
 
 const initialState = {
   firstName: '',
@@ -39,11 +40,14 @@ function PatientForm({ onSave, patient, onClear }) {
     chronicDiseases: false,
   });
   const [saveWarning, setSaveWarning] = useState('');
+  const [readOnly, setReadOnly] = useState(!!patient);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
   function normalizePatient(p) {
     if (!p) return initialState;
     // Backend now returns only camelCase fields
     return {
       ...initialState,
+      id: p.id || p._id || '',
       firstName: p.firstName || '',
       lastName: p.lastName || '',
       gender: p.gender || '',
@@ -149,6 +153,8 @@ function PatientForm({ onSave, patient, onClear }) {
       }];
     }
     const patientData = {
+      id: form.id || '',
+      clinicId: form.clinicId || patient?.clinicId || '',
       firstName: form.firstName || '',
       lastName: form.lastName || '',
       gender: form.gender || '',
@@ -165,39 +171,49 @@ function PatientForm({ onSave, patient, onClear }) {
       labTests,
     };
     onSave(patientData);
-    setForm(initialState);
-    setInputs({
-      medication: '',
-      allergy: '',
-      surgery: '',
-      disease: '',
-      labTestName: '',
-      labTestResult: '',
-      labTestDate: ''
-    });
+    // Do NOT clear form or reset fields here. Let parent handle it after successful save.
   };
 
   return (
-    <Paper sx={{ p: 3, mb: 4 }} elevation={4}>
+    <Paper sx={{ p: 3, mb: 4, position: 'relative' }} elevation={4}>
+      {/* Modern Edit button at top-right with label */}
+      {readOnly && (
+        <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 10, display: 'flex', alignItems: 'center', bgcolor: 'background.paper', boxShadow: 2, borderRadius: 2, px: 1 }}>
+          <IconButton color="primary" onClick={() => setEditDialogOpen(true)}>
+            <EditIcon />
+          </IconButton>
+          <Typography variant="button" color="primary" sx={{ ml: 1, fontWeight: 700 }}>Edit</Typography>
+        </Box>
+      )}
+      {/* Edit confirmation dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
+        <Box p={3}>
+          <Typography variant="h6" mb={2}>Enable editing for this patient record?</Typography>
+          <Box display="flex" justifyContent="flex-end" gap={2}>
+            <Button onClick={() => setEditDialogOpen(false)} variant="outlined">Cancel</Button>
+            <Button onClick={() => { setReadOnly(false); setEditDialogOpen(false); }} color="primary" variant="contained">Edit</Button>
+          </Box>
+        </Box>
+      </Dialog>
       <form onSubmit={handleSubmit}>
         <Typography variant="h6" gutterBottom>Personal Information</Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
-            <TextField label="First Name" name="firstName" value={form.firstName} onChange={handleChange} required fullWidth />
+            <TextField label="First Name" name="firstName" value={form.firstName} onChange={handleChange} required fullWidth InputProps={{ readOnly }} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Last Name" name="lastName" value={form.lastName} onChange={handleChange} required fullWidth />
+            <TextField label="Last Name" name="lastName" value={form.lastName} onChange={handleChange} required fullWidth InputProps={{ readOnly }} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Contact Number" name="contactNumber" value={form.contactNumber} onChange={handleChange} required fullWidth />
+            <TextField label="Contact Number" name="contactNumber" value={form.contactNumber} onChange={handleChange} required fullWidth InputProps={{ readOnly }} />
           </Grid>
           <Grid item xs={12} sm={6}>
-            <TextField label="Email" name="email" value={form.email} onChange={handleChange} type="email" fullWidth />
+            <TextField label="Email" name="email" value={form.email} onChange={handleChange} type="email" fullWidth InputProps={{ readOnly }} />
           </Grid>
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel>Gender</InputLabel>
-              <Select name="gender" value={form.gender} label="Gender" onChange={handleChange} required>
+              <Select name="gender" value={form.gender} label="Gender" onChange={handleChange} required disabled={readOnly}>
                 {genders.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
               </Select>
             </FormControl>
@@ -212,17 +228,18 @@ function PatientForm({ onSave, patient, onClear }) {
               InputLabelProps={{ shrink: true }}
               required
               fullWidth
+              InputProps={{ readOnly }}
             />
           </Grid>
           <Grid item xs={12}>
-            <TextField label="Address" name="address" value={form.address} onChange={handleChange} required fullWidth />
+            <TextField label="Address" name="address" value={form.address} onChange={handleChange} required fullWidth InputProps={{ readOnly }} />
           </Grid>
         </Grid>
         <Divider sx={{ my: 3 }} />
         <Typography variant="h6" gutterBottom>Medical History</Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={4}>
-            <FormControl fullWidth>
+            <FormControl fullWidth disabled={readOnly}>
               <InputLabel>Blood Group</InputLabel>
               <Select name="bloodGroup" value={form.bloodGroup} label="Blood Group" onChange={handleChange}>
                 {bloodGroups.map(bg => <MenuItem key={bg} value={bg}>{bg}</MenuItem>)}
@@ -235,12 +252,12 @@ function PatientForm({ onSave, patient, onClear }) {
               <Box flex={1}>
                 <Typography variant="subtitle2">Current Medications</Typography>
                 <Box display="flex" gap={1} alignItems="center">
-                  <TextField size="small" value={inputs.medication} onChange={e => setInputs({ ...inputs, medication: e.target.value })} placeholder="Add medication" />
-                  <IconButton color="primary" onClick={() => handleAddList('currentMedications', inputs.medication)}><AddCircleOutlineIcon /></IconButton>
+                  <TextField size="small" value={inputs.medication} onChange={e => setInputs({ ...inputs, medication: e.target.value })} placeholder="Add medication" disabled={readOnly} />
+                  <IconButton color="primary" onClick={() => handleAddList('currentMedications', inputs.medication)} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
                 </Box>
                 <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
                   {(showAllChips.currentMedications ? form.currentMedications : form.currentMedications.slice(0, CHIP_DISPLAY_LIMIT)).map((m, idx) => (
-                    <Chip key={idx} label={m} onDelete={() => handleDeleteList('currentMedications', idx)} color="primary" />
+                    <Chip key={idx} label={m} onDelete={readOnly ? undefined : () => handleDeleteList('currentMedications', idx)} color="primary" />
                   ))}
                   {form.currentMedications.length > CHIP_DISPLAY_LIMIT && !showAllChips.currentMedications && (
                     <Tooltip title={form.currentMedications.slice(CHIP_DISPLAY_LIMIT).join(', ')}>
@@ -265,12 +282,12 @@ function PatientForm({ onSave, patient, onClear }) {
               <Box flex={1}>
                 <Typography variant="subtitle2">Allergies</Typography>
                 <Box display="flex" gap={1} alignItems="center">
-                  <TextField size="small" value={inputs.allergy} onChange={e => setInputs({ ...inputs, allergy: e.target.value })} placeholder="Add allergy" />
-                  <IconButton color="primary" onClick={() => handleAddList('allergies', inputs.allergy)}><AddCircleOutlineIcon /></IconButton>
+                  <TextField size="small" value={inputs.allergy} onChange={e => setInputs({ ...inputs, allergy: e.target.value })} placeholder="Add allergy" disabled={readOnly} />
+                  <IconButton color="primary" onClick={() => handleAddList('allergies', inputs.allergy)} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
                 </Box>
                 <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
                   {(showAllChips.allergies ? form.allergies : form.allergies.slice(0, CHIP_DISPLAY_LIMIT)).map((a, idx) => (
-                    <Chip key={idx} label={a} onDelete={() => handleDeleteList('allergies', idx)} color="primary" />
+                    <Chip key={idx} label={a} onDelete={readOnly ? undefined : () => handleDeleteList('allergies', idx)} color="primary" />
                   ))}
                   {form.allergies.length > CHIP_DISPLAY_LIMIT && !showAllChips.allergies && (
                     <Tooltip title={form.allergies.slice(CHIP_DISPLAY_LIMIT).join(', ')}>
@@ -297,12 +314,12 @@ function PatientForm({ onSave, patient, onClear }) {
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2">Past Surgeries</Typography>
             <Box display="flex" gap={1} alignItems="center">
-              <TextField size="small" value={inputs.surgery} onChange={e => setInputs({ ...inputs, surgery: e.target.value })} placeholder="Add surgery" />
-              <IconButton color="primary" onClick={() => handleAddList('pastSurgeries', inputs.surgery)}><AddCircleOutlineIcon /></IconButton>
+              <TextField size="small" value={inputs.surgery} onChange={e => setInputs({ ...inputs, surgery: e.target.value })} placeholder="Add surgery" disabled={readOnly} />
+              <IconButton color="primary" onClick={() => handleAddList('pastSurgeries', inputs.surgery)} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
             </Box>
             <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
               {(showAllChips.pastSurgeries ? form.pastSurgeries : form.pastSurgeries.slice(0, CHIP_DISPLAY_LIMIT)).map((s, idx) => (
-                <Chip key={idx} label={s} onDelete={() => handleDeleteList('pastSurgeries', idx)} color="primary" />
+                <Chip key={idx} label={s} onDelete={readOnly ? undefined : () => handleDeleteList('pastSurgeries', idx)} color="primary" />
               ))}
               {form.pastSurgeries.length > CHIP_DISPLAY_LIMIT && !showAllChips.pastSurgeries && (
                 <Tooltip title={form.pastSurgeries.slice(CHIP_DISPLAY_LIMIT).join(', ')}>
@@ -327,12 +344,12 @@ function PatientForm({ onSave, patient, onClear }) {
           <Grid item xs={12} sm={6}>
             <Typography variant="subtitle2">Chronic Diseases</Typography>
             <Box display="flex" gap={1} alignItems="center">
-              <TextField size="small" value={inputs.disease} onChange={e => setInputs({ ...inputs, disease: e.target.value })} placeholder="Add disease" />
-              <IconButton color="primary" onClick={() => handleAddList('chronicDiseases', inputs.disease)}><AddCircleOutlineIcon /></IconButton>
+              <TextField size="small" value={inputs.disease} onChange={e => setInputs({ ...inputs, disease: e.target.value })} placeholder="Add disease" disabled={readOnly} />
+              <IconButton color="primary" onClick={() => handleAddList('chronicDiseases', inputs.disease)} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
             </Box>
             <Box mt={1} display="flex" flexWrap="wrap" gap={1}>
               {(showAllChips.chronicDiseases ? form.chronicDiseases : form.chronicDiseases.slice(0, CHIP_DISPLAY_LIMIT)).map((d, idx) => (
-                <Chip key={idx} label={d} onDelete={() => handleDeleteList('chronicDiseases', idx)} color="primary" />
+                <Chip key={idx} label={d} onDelete={readOnly ? undefined : () => handleDeleteList('chronicDiseases', idx)} color="primary" />
               ))}
               {form.chronicDiseases.length > CHIP_DISPLAY_LIMIT && !showAllChips.chronicDiseases && (
                 <Tooltip title={form.chronicDiseases.slice(CHIP_DISPLAY_LIMIT).join(', ')}>
@@ -366,58 +383,43 @@ function PatientForm({ onSave, patient, onClear }) {
               onChange={handleDoctorNotesChange}
               InputLabelProps={{ shrink: true }}
               fullWidth
+              InputProps={{ readOnly }}
             />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField label="Doctor Name" name="doctorName" value={form.doctorNotes.doctorName} onChange={handleDoctorNotesChange} fullWidth />
+            <TextField label="Doctor Name" name="doctorName" value={form.doctorNotes.doctorName} onChange={handleDoctorNotesChange} fullWidth InputProps={{ readOnly }} />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField label="Diagnosis" name="diagnosis" value={form.doctorNotes.diagnosis} onChange={handleDoctorNotesChange} fullWidth />
+            <TextField label="Diagnosis" name="diagnosis" value={form.doctorNotes.diagnosis} onChange={handleDoctorNotesChange} fullWidth InputProps={{ readOnly }} />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField label="Treatment Plan" name="treatmentPlan" value={form.doctorNotes.treatmentPlan} onChange={handleDoctorNotesChange} fullWidth />
+            <TextField label="Treatment Plan" name="treatmentPlan" value={form.doctorNotes.treatmentPlan} onChange={handleDoctorNotesChange} fullWidth InputProps={{ readOnly }} />
           </Grid>
         </Grid>
         <Divider sx={{ my: 3 }} />
         <Typography variant="h6" gutterBottom>Lab Test Results</Typography>
         <Grid container spacing={2}>
           <Grid item xs={12} sm={4}>
-            <TextField label="Lab Test Name" size="small" value={inputs.labTestName} onChange={e => setInputs({ ...inputs, labTestName: e.target.value })} fullWidth />
+            <TextField label="Lab Test Name" size="small" value={inputs.labTestName} onChange={e => setInputs({ ...inputs, labTestName: e.target.value })} fullWidth disabled={readOnly} />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <TextField label="Lab Test Result" size="small" value={inputs.labTestResult} onChange={e => setInputs({ ...inputs, labTestResult: e.target.value })} fullWidth />
+            <TextField label="Lab Test Result" size="small" value={inputs.labTestResult} onChange={e => setInputs({ ...inputs, labTestResult: e.target.value })} fullWidth disabled={readOnly} />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField
-              label="Lab Test Date"
-              size="small"
-              type="date"
-              value={inputs.labTestDate}
-              onChange={e => setInputs({ ...inputs, labTestDate: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-            />
+            <TextField label="Lab Test Date" size="small" type="date" value={inputs.labTestDate} onChange={e => setInputs({ ...inputs, labTestDate: e.target.value })} InputLabelProps={{ shrink: true }} fullWidth disabled={readOnly} />
           </Grid>
           <Grid item xs={12} sm={1}>
-            <IconButton color="primary" onClick={handleAddLabTest}><AddCircleOutlineIcon /></IconButton>
+            <IconButton color="primary" onClick={handleAddLabTest} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
           </Grid>
         </Grid>
         <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
           {form.labTests.map((test, idx) => (
-            <Card key={idx} sx={{ minWidth: 220, boxShadow: 2, borderRadius: 2, position: 'relative' }}>
+            <Card key={idx} sx={{ mb: 2 }}>
               <CardContent>
-                <Typography variant="subtitle2" color="primary" fontWeight={700} gutterBottom>
-                  {test.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Result: {test.result}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Date: {test.date}
-                </Typography>
-                <IconButton size="small" sx={{ position: 'absolute', top: 8, right: 8 }} onClick={() => handleDeleteLabTest(idx)}>
-                  <DeleteIcon fontSize="small" />
-                </IconButton>
+                <Typography variant="subtitle2">Test Name: {test.name}</Typography>
+                <Typography variant="subtitle2">Result: {test.result}</Typography>
+                <Typography variant="subtitle2">Date: {test.date}</Typography>
+                {/* No delete/edit for lab tests in readOnly mode */}
               </CardContent>
             </Card>
           ))}

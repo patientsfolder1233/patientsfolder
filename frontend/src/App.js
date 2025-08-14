@@ -18,6 +18,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [patients, setPatients] = useState([]);
   const [searchName, setSearchName] = useState(''); 
   const [searchDob, setSearchDob] = useState('');
@@ -25,6 +26,7 @@ function App() {
   const [formPatient, setFormPatient] = useState(null);
   const [formKey, setFormKey] = useState(0);
   const [clinicName, setClinicName] = useState('');
+  const [editingPatient, setEditingPatient] = useState(null);
 
   // Fetch clinic name from token after login
   React.useEffect(() => {
@@ -57,6 +59,8 @@ function App() {
         const safeArr = val => Array.isArray(val) ? val : (typeof val === 'string' && val.trim().startsWith('[') ? JSON.parse(val) : []);
         const safeObj = val => (typeof val === 'object' && val !== null) ? val : (typeof val === 'string' && val.trim().startsWith('{') ? JSON.parse(val) : { visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' });
         setFormPatient({
+          id: p.id,
+          clinicId: p.clinicId,
           firstName: p.firstName || '',
           lastName: p.lastName || '',
           gender: p.gender || '',
@@ -96,36 +100,42 @@ function App() {
     if (token) fetchPatients();
   }, [token]);
 
+  // Called when user clicks Save in PatientForm
   const handleSave = (patient) => {
-    setPendingSaveData(patient);
+    setEditingPatient(patient);
     setSaveDialogOpen(true);
   };
 
+  // Called when user confirms save
   const confirmSave = async () => {
-    if (!token) return;
-    setSaving(true);
+    setSaveDialogOpen(false);
     setSaveSuccess(false);
+    setSaveError('');
     try {
-      if (editingIdx !== null) {
-        const updated = [...patients];
-        updated[editingIdx] = pendingSaveData;
-        setPatients(updated);
-        setEditingIdx(null);
-        setFormPatient(null);
-      } else {
-        await axios.post('http://localhost:5000/patients', pendingSaveData, {
+      // Only create new record if there is NO id
+      if (editingPatient && editingPatient.id) {
+        await axios.put(`http://localhost:5000/patients/${editingPatient.id}`, editingPatient, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        await fetchPatients();
+        setSaveSuccess(true);
+        setFormPatient(null); // Clear form only after successful save
+        setEditingIdx(null);
+        setTimeout(() => setSaveSuccess(false), 2000);
+      } else {
+        // Create new record only if id is missing
+        await axios.post('http://localhost:5000/patients', editingPatient, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSaveSuccess(true);
+        setFormPatient(null); // Clear form only after successful save
+        setEditingIdx(null);
+        setTimeout(() => setSaveSuccess(false), 2000);
       }
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 2000);
-    } catch {
-      // Optionally show error
+    } catch (err) {
+      setSaveError('Failed to save changes.');
+      setTimeout(() => setSaveError(''), 2000);
     }
-    setSaveDialogOpen(false);
-    setPendingSaveData(null);
-    setSaving(false);
+    setEditingPatient(null);
   };
 
   const handleEdit = (idx) => {
@@ -135,6 +145,8 @@ function App() {
     const doctorNotes = typeof p.doctor_notes === 'object' && p.doctor_notes !== null ? p.doctor_notes : { visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' };
     const labTests = Array.isArray(p.lab_tests) ? p.lab_tests : [];
     setFormPatient({
+      id: p.id,
+      clinicId: p.clinicId,
       firstName: p.first_name || '',
       lastName: p.last_name || '',
       gender: p.gender || '',
@@ -156,7 +168,7 @@ function App() {
       labTests: labTests.map(test => ({
         name: test.name || '',
         result: test.result || '',
-        date: test.date ? (typeof test.date === 'string' ? test.date.split('T')[0] : new Date(test.date).toISOString().slice(0,16)) : '',
+        date: test.date ? test.date : '',
       })),
     });
     setFormKey(formKey + 1);
@@ -392,13 +404,24 @@ function App() {
       {/* Save Confirmation Dialog */}
       <Dialog open={saveDialogOpen} onClose={() => setSaveDialogOpen(false)}>
         <Box p={3}>
-          <Typography variant="h6" mb={2}>Are you sure you want to save this patient record?</Typography>
+          <Typography variant="h6" mb={2}>Are you sure you want to save changes?</Typography>
           <Box display="flex" justifyContent="flex-end" gap={2}>
             <Button onClick={() => setSaveDialogOpen(false)} variant="outlined">Cancel</Button>
             <Button onClick={confirmSave} color="primary" variant="contained">Save</Button>
           </Box>
         </Box>
       </Dialog>
+      {/* Success/Failure Message */}
+      {saveSuccess && (
+        <Box sx={{ position: 'fixed', top: 24, right: 24, bgcolor: 'success.main', color: '#fff', p: 2, borderRadius: 2, zIndex: 9999 }}>
+          <Typography>Changes saved successfully!</Typography>
+        </Box>
+      )}
+      {saveError && (
+        <Box sx={{ position: 'fixed', top: 24, right: 24, bgcolor: 'error.main', color: '#fff', p: 2, borderRadius: 2, zIndex: 9999 }}>
+          <Typography>{saveError}</Typography>
+        </Box>
+      )}
   {/* Removed table with ID, Name, DOB, Actions from the bottom */}
     </Container>
   );
