@@ -223,7 +223,7 @@ function App() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, position: 'relative' }}>
+    <Container maxWidth="md" sx={{ mt: { xs: 2, md: 4 }, mb: { xs: 2, md: 4 }, px: { xs: 1, md: 4 }, position: 'relative' }}>
       {(loading || saving) && (
         <Box sx={{
           position: 'absolute',
@@ -348,15 +348,16 @@ function App() {
           </Box>
         </Box>
       )}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-        <Typography variant="h4" fontWeight={700} color="#1976d2">Patient Folder</Typography>
-        <Box display="flex" alignItems="center" gap={2}>
+      <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', md: 'center' }} mb={1} gap={2}>
+        <Typography variant="h5" fontWeight={700} color="#1976d2" sx={{ mb: { xs: 2, md: 0 } }}>Patient Folder</Typography>
+        <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }} gap={2} width={{ xs: '100%', sm: 'auto' }}>
           <TextField
             label="Search by Full Name"
             value={searchName}
             onChange={e => setSearchName(e.target.value)}
             size="small"
-            sx={{ minWidth: 180 }}
+            sx={{ minWidth: { xs: '100%', sm: 180 } }}
+            fullWidth={true}
           />
           <TextField
             label="Search by DOB"
@@ -365,27 +366,50 @@ function App() {
             onChange={e => setSearchDob(e.target.value)}
             size="small"
             InputLabelProps={{ shrink: true }}
-            sx={{ minWidth: 140 }}
+            sx={{ minWidth: { xs: '100%', sm: 140 } }}
+            fullWidth={true}
           />
-          <Button variant="outlined" startIcon={<SearchIcon />} onClick={fetchPatients} sx={{ fontWeight: 700 }}>Search</Button>
-          <Button variant="contained" color="secondary" onClick={handleClear} sx={{ fontWeight: 700 }}>Clear</Button>
+          <Button
+            variant="outlined"
+            startIcon={<SearchIcon />}
+            onClick={fetchPatients}
+            sx={{
+              fontWeight: 700,
+              width: { xs: '100%', sm: 'auto' },
+              px: { xs: 2, sm: 4 },
+              py: { xs: 1, sm: 1.5 },
+              borderRadius: 3,
+              border: '2px solid #1976d2',
+              color: '#1976d2',
+              backgroundColor: { sm: '#fff' },
+              boxShadow: { sm: 2 },
+              '&:hover': {
+                backgroundColor: '#e3f2fd',
+                borderColor: '#1565c0',
+                color: '#1565c0',
+              },
+            }}
+          >
+            Search
+          </Button>
+          <Button variant="contained" color="secondary" onClick={handleClear} sx={{ fontWeight: 700, width: { xs: '100%', sm: 'auto' } }}>Clear</Button>
         </Box>
       </Box>
       <Divider sx={{ mb: 3 }} />
-      <Box display="flex" justifyContent="flex-end" alignItems="center" mb={2}>
-        <Typography variant="h6" fontWeight={700} color="#1976d2" sx={{ mr: 2 }}>
+      <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} justifyContent="flex-end" alignItems={{ xs: 'stretch', sm: 'center' }} mb={2} gap={2}>
+        <Typography variant="h6" fontWeight={700} color="#1976d2" sx={{ mr: { sm: 2, xs: 0 }, mb: { xs: 2, sm: 0 } }}>
           {clinicName}
         </Typography>
         <Button
           variant="contained"
           color="error"
-          sx={{ fontWeight: 700, borderRadius: 2, boxShadow: 2 }}
+          sx={{ fontWeight: 700, borderRadius: 2, boxShadow: 2, width: { xs: '100%', sm: 'auto' } }}
           onClick={handleLogout}
         >
           Logout
         </Button>
       </Box>
-  <PatientForm key={formKey} onSave={handleSave} patient={formPatient} onClear={handleClear} />
+      <PatientForm key={formKey} onSave={handleSave} patient={formPatient} onClear={handleClear} />
       {/* Logout Confirmation Dialog */}
       <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)}>
         <Box p={3}>
