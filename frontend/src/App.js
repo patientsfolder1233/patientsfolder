@@ -224,13 +224,14 @@ function App() {
 
   return (
     <Container maxWidth="md" sx={{ mt: { xs: 2, md: 4 }, mb: { xs: 2, md: 4 }, px: { xs: 1, md: 4 }, position: 'relative' }}>
+      {/* Overlay Alerts: Always fixed and centered on viewport */}
       {(loading || saving) && (
         <Box sx={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
-          width: '100%',
-          height: '100%',
+          width: '100vw',
+          height: '100vh',
           bgcolor: 'rgba(255,255,255,0.7)',
           backdropFilter: 'blur(6px)',
           zIndex: 9999,
@@ -247,11 +248,11 @@ function App() {
       )}
       {foundSuccess && (
         <Box sx={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
-          width: '100%',
-          height: '100%',
+          width: '100vw',
+          height: '100vh',
           bgcolor: 'rgba(255,255,255,0.7)',
           backdropFilter: 'blur(6px)',
           zIndex: 9999,
@@ -281,11 +282,11 @@ function App() {
       )}
       {notFound && (
         <Box sx={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
-          width: '100%',
-          height: '100%',
+          width: '100vw',
+          height: '100vh',
           bgcolor: 'rgba(255,255,255,0.7)',
           backdropFilter: 'blur(6px)',
           zIndex: 9999,
@@ -316,11 +317,11 @@ function App() {
       )}
       {saveSuccess && (
         <Box sx={{
-          position: 'absolute',
+          position: 'fixed',
           top: 0,
           left: 0,
-          width: '100%',
-          height: '100%',
+          width: '100vw',
+          height: '100vh',
           bgcolor: 'rgba(255,255,255,0.7)',
           backdropFilter: 'blur(6px)',
           zIndex: 9999,
