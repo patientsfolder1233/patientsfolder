@@ -44,7 +44,6 @@ function PatientForm({ onSave, patient, onClear }) {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   function normalizePatient(p) {
     if (!p) return initialState;
-    // Backend now returns only camelCase fields
     return {
       ...initialState,
       id: p.id || p._id || '',
@@ -61,7 +60,8 @@ function PatientForm({ onSave, patient, onClear }) {
       pastSurgeries: Array.isArray(p.pastSurgeries) ? p.pastSurgeries : [],
       chronicDiseases: Array.isArray(p.chronicDiseases) ? p.chronicDiseases : [],
       labTests: Array.isArray(p.labTests) ? p.labTests : [],
-      doctorNotes: typeof p.doctorNotes === 'object' && p.doctorNotes !== null ? p.doctorNotes : initialState.doctorNotes,
+      // Fix: always populate doctorNotesList for card rendering
+      doctorNotesList: Array.isArray(p.doctorNotesList) ? p.doctorNotesList : (p.doctorNotes ? [p.doctorNotes] : []),
     };
   }
   const [form, setForm] = useState(() => normalizePatient(patient));
@@ -384,23 +384,59 @@ function PatientForm({ onSave, patient, onClear }) {
               label="Visit Date"
               name="visitDate"
               type="date"
-              value={form.doctorNotes.visitDate}
-              onChange={handleDoctorNotesChange}
+              value={inputs.visitDate || ''}
+              onChange={e => setInputs({ ...inputs, visitDate: e.target.value })}
               InputLabelProps={{ shrink: true }}
               fullWidth
-              InputProps={{ readOnly }}
+              disabled={readOnly}
             />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField label="Doctor Name" name="doctorName" value={form.doctorNotes.doctorName} onChange={handleDoctorNotesChange} fullWidth InputProps={{ readOnly }} />
+            <TextField label="Doctor Name" name="doctorName" value={inputs.doctorName || ''} onChange={e => setInputs({ ...inputs, doctorName: e.target.value })} fullWidth disabled={readOnly} />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField label="Diagnosis" name="diagnosis" value={form.doctorNotes.diagnosis} onChange={handleDoctorNotesChange} fullWidth InputProps={{ readOnly }} />
+            <TextField label="Diagnosis" name="diagnosis" value={inputs.diagnosis || ''} onChange={e => setInputs({ ...inputs, diagnosis: e.target.value })} fullWidth disabled={readOnly} />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField label="Treatment Plan" name="treatmentPlan" value={form.doctorNotes.treatmentPlan} onChange={handleDoctorNotesChange} fullWidth InputProps={{ readOnly }} />
+            <TextField label="Treatment Plan" name="treatmentPlan" value={inputs.treatmentPlan || ''} onChange={e => setInputs({ ...inputs, treatmentPlan: e.target.value })} fullWidth multiline minRows={3} disabled={readOnly} />
+          </Grid>
+          <Grid item xs={12} sm={1}>
+            <IconButton color="primary" onClick={() => {
+              if (inputs.visitDate && inputs.doctorName && inputs.diagnosis && inputs.treatmentPlan) {
+                setForm({
+                  ...form,
+                  doctorNotesList: [
+                    ...(form.doctorNotesList || []),
+                    {
+                      visitDate: inputs.visitDate,
+                      doctorName: inputs.doctorName,
+                      diagnosis: inputs.diagnosis,
+                      treatmentPlan: inputs.treatmentPlan
+                    }
+                  ]
+                });
+                setInputs({ ...inputs, visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' });
+              }
+            }} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
           </Grid>
         </Grid>
+        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+          {(form.doctorNotesList || []).map((note, idx) => (
+            <Card key={idx} sx={{ mb: 2 }}>
+              <CardContent>
+                <Typography variant="subtitle2">Visit Date: {note.visitDate}</Typography>
+                <Typography variant="subtitle2">Doctor: {note.doctorName}</Typography>
+                <Typography variant="subtitle2">Diagnosis: {note.diagnosis}</Typography>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>Treatment Plan: {note.treatmentPlan}</Typography>
+                {!readOnly && (
+                  <IconButton color="error" size="small" onClick={() => {
+                    setForm({ ...form, doctorNotesList: form.doctorNotesList.filter((_, i) => i !== idx) });
+                  }}><DeleteIcon /></IconButton>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </Box>
         <Divider sx={{ my: 3 }} />
         <Typography variant="h6" gutterBottom>Lab Test Results</Typography>
         <Grid container spacing={2}>
