@@ -420,23 +420,25 @@ function PatientForm({ onSave, patient, onClear }) {
             }} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
           </Grid>
         </Grid>
-        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-          {(form.doctorNotesList || []).map((note, idx) => (
-            <Card key={idx} sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="subtitle2">Visit Date: {note.visitDate}</Typography>
-                <Typography variant="subtitle2">Doctor: {note.doctorName}</Typography>
-                <Typography variant="subtitle2">Diagnosis: {note.diagnosis}</Typography>
-                <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>Treatment Plan: {note.treatmentPlan}</Typography>
-                {!readOnly && (
-                  <IconButton color="error" size="small" onClick={() => {
-                    setForm({ ...form, doctorNotesList: form.doctorNotesList.filter((_, i) => i !== idx) });
-                  }}><DeleteIcon /></IconButton>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
+        {(form.doctorNotesList && form.doctorNotesList.length > 0 && form.doctorNotesList.some(note => note.visitDate || note.doctorName || note.diagnosis || note.treatmentPlan)) && (
+          <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            {form.doctorNotesList.filter(note => note.visitDate || note.doctorName || note.diagnosis || note.treatmentPlan).map((note, idx) => (
+              <Card key={idx} sx={{ mb: 2 }}>
+                <CardContent>
+                  <Typography variant="subtitle2">Visit Date: {note.visitDate}</Typography>
+                  <Typography variant="subtitle2">Doctor: {note.doctorName}</Typography>
+                  <Typography variant="subtitle2">Diagnosis: {note.diagnosis}</Typography>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>Treatment Plan: {note.treatmentPlan}</Typography>
+                  {!readOnly && (
+                    <IconButton color="error" size="small" onClick={() => {
+                      setForm({ ...form, doctorNotesList: form.doctorNotesList.filter((_, i) => i !== idx) });
+                    }}><DeleteIcon /></IconButton>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        )}
         <Divider sx={{ my: 3 }} />
         <Typography variant="h6" gutterBottom>Lab Test Results</Typography>
         <Grid container spacing={2}>
