@@ -121,19 +121,35 @@ function App() {
           headers: { Authorization: `Bearer ${token}` }
         });
         saveMsg = 'Changes saved successfully!';
-        setFormPatient(null);
-        setEditingIdx(null);
       } else {
         await axios.post('http://localhost:5000/patients', editingPatient, {
           headers: { Authorization: `Bearer ${token}` }
         });
         saveMsg = 'Patient record created successfully!';
-        setFormPatient(null);
-        setEditingIdx(null);
         setPatients([]); // Clear all records after adding new patient
         setSearchName('');
         setSearchDob('');
       }
+      // Clear all fields and spaces in the form
+      setFormPatient({
+        firstName: '',
+        lastName: '',
+        gender: '',
+        dob: '',
+        contactNumber: '',
+        email: '',
+        address: '',
+        bloodGroup: '',
+        currentMedications: [],
+        allergies: [],
+        pastSurgeries: [],
+        chronicDiseases: [],
+        doctorNotes: { visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' },
+        labTests: [],
+        doctorNotesList: [],
+      });
+      setEditingIdx(null);
+      setFormKey(formKey + 1);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 2000);
       setSaveMessage(saveMsg);
