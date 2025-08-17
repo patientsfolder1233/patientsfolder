@@ -152,6 +152,13 @@ function PatientForm({ onSave, patient, onClear }) {
         date: inputs.labTestDate
       }];
     }
+    // Always include current Doctor's Notes input fields in the saved data
+    const doctorNotes = {
+      visitDate: inputs.visitDate || form.doctorNotes?.visitDate || '',
+      doctorName: inputs.doctorName || form.doctorNotes?.doctorName || '',
+      diagnosis: inputs.diagnosis || form.doctorNotes?.diagnosis || '',
+      treatmentPlan: inputs.treatmentPlan || form.doctorNotes?.treatmentPlan || ''
+    };
     const patientData = {
       id: form.id || '',
       clinicId: form.clinicId || patient?.clinicId || '',
@@ -167,7 +174,7 @@ function PatientForm({ onSave, patient, onClear }) {
       allergies,
       pastSurgeries,
       chronicDiseases,
-      doctorNotes: typeof form.doctorNotes === 'object' && form.doctorNotes !== null ? form.doctorNotes : { visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' },
+      doctorNotes,
       labTests,
     };
     onSave(patientData);
@@ -413,7 +420,13 @@ function PatientForm({ onSave, patient, onClear }) {
                       diagnosis: inputs.diagnosis,
                       treatmentPlan: inputs.treatmentPlan
                     }
-                  ]
+                  ],
+                  doctorNotes: {
+                    visitDate: inputs.visitDate,
+                    doctorName: inputs.doctorName,
+                    diagnosis: inputs.diagnosis,
+                    treatmentPlan: inputs.treatmentPlan
+                  }
                 });
                 setInputs({ ...inputs, visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' });
               }

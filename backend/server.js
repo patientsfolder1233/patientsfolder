@@ -165,7 +165,7 @@ app.get('/patients', auth, async (req, res) => {
         allergies: parseField(row.allergies, []),
         pastSurgeries: parseField(row.pastSurgeries, []),
         chronicDiseases: parseField(row.chronicDiseases, []),
-        doctorNotes: parseField(row.doctorNotes, {}),
+        doctorNotes: parseField(row.doctorNotes, []), // now always array
         labTests: parseField(row.labTests, []),
       };
     });
