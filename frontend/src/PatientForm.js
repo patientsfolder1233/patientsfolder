@@ -42,6 +42,9 @@ function PatientForm({ onSave, patient, onClear }) {
   const [saveWarning, setSaveWarning] = useState('');
   const [readOnly, setReadOnly] = useState(!!patient);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDoctorNoteIdx, setDeleteDoctorNoteIdx] = useState(null);
+  const [deleteLabTestIdx, setDeleteLabTestIdx] = useState(null);
+
   function normalizePatient(p) {
     if (!p) return initialState;
     return {
@@ -443,9 +446,7 @@ function PatientForm({ onSave, patient, onClear }) {
                   <Typography variant="subtitle2">Diagnosis: {note.diagnosis}</Typography>
                   <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>Treatment Plan: {note.treatmentPlan}</Typography>
                   {!readOnly && (
-                    <IconButton color="error" size="small" onClick={() => {
-                      setForm({ ...form, doctorNotesList: form.doctorNotesList.filter((_, i) => i !== idx) });
-                    }}><DeleteIcon /></IconButton>
+                    <IconButton color="error" size="small" onClick={() => setDeleteDoctorNoteIdx(idx)}><DeleteIcon /></IconButton>
                   )}
                 </CardContent>
               </Card>
@@ -476,6 +477,9 @@ function PatientForm({ onSave, patient, onClear }) {
                 <Typography variant="subtitle2">Result: {test.result}</Typography>
                 <Typography variant="subtitle2">Date: {test.date}</Typography>
                 {/* No delete/edit for lab tests in readOnly mode */}
+                {!readOnly && (
+                  <IconButton color="error" size="small" onClick={() => setDeleteLabTestIdx(idx)}><DeleteIcon /></IconButton>
+                )}
               </CardContent>
             </Card>
           ))}
@@ -502,6 +506,34 @@ function PatientForm({ onSave, patient, onClear }) {
           </Button>
           <Button type="button" variant="outlined" color="secondary" onClick={onClear}>Clear</Button>
         </Box>
+
+        {/* Doctor's Notes Delete Confirmation Dialog */}
+        <Dialog open={deleteDoctorNoteIdx !== null} onClose={() => setDeleteDoctorNoteIdx(null)}>
+          <Box p={3}>
+            <Typography variant="h6" mb={2}>Are you sure you want to delete this doctor's note?</Typography>
+            <Box display="flex" justifyContent="flex-end" gap={2}>
+              <Button onClick={() => setDeleteDoctorNoteIdx(null)} variant="outlined">Cancel</Button>
+              <Button color="error" variant="contained" onClick={() => {
+                setForm({ ...form, doctorNotesList: form.doctorNotesList.filter((_, i) => i !== deleteDoctorNoteIdx) });
+                setDeleteDoctorNoteIdx(null);
+              }}>Delete</Button>
+            </Box>
+          </Box>
+        </Dialog>
+
+        {/* Lab Test Delete Confirmation Dialog */}
+        <Dialog open={deleteLabTestIdx !== null} onClose={() => setDeleteLabTestIdx(null)}>
+          <Box p={3}>
+            <Typography variant="h6" mb={2}>Are you sure you want to delete this lab test result?</Typography>
+            <Box display="flex" justifyContent="flex-end" gap={2}>
+              <Button onClick={() => setDeleteLabTestIdx(null)} variant="outlined">Cancel</Button>
+              <Button color="error" variant="contained" onClick={() => {
+                setForm({ ...form, labTests: form.labTests.filter((_, i) => i !== deleteLabTestIdx) });
+                setDeleteLabTestIdx(null);
+              }}>Delete</Button>
+            </Box>
+          </Box>
+        </Dialog>
       </form>
     </Paper>
   );
