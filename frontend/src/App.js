@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import BackToTopButton from './BackToTopButton';
 import axios from 'axios';
 import PatientForm from './PatientForm';
 import LandingPage from './LandingPage';
@@ -8,6 +9,19 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 function App() {
+  // Back to Top button logic
+  const [showTopBtn, setShowTopBtn] = useState(false);
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowTopBtn(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleScrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const [notFound, setNotFound] = useState(false);
   const [foundSuccess, setFoundSuccess] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
@@ -472,6 +486,7 @@ function App() {
         </Box>
       )}
   {/* Removed table with ID, Name, DOB, Actions from the bottom */}
+      <BackToTopButton show={showTopBtn} onClick={handleScrollToTop} />
     </Container>
   );
 }
