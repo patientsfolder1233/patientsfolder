@@ -58,7 +58,7 @@ function App() {
         const p = res.data[0];
         console.log('DEBUG: First patient for form:', p);
         const safeArr = val => Array.isArray(val) ? val : (typeof val === 'string' && val.trim().startsWith('[') ? JSON.parse(val) : []);
-        const safeObj = val => (typeof val === 'object' && val !== null) ? val : (typeof val === 'string' && val.trim().startsWith('{') ? JSON.parse(val) : { visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' });
+        const safeNotesArr = val => Array.isArray(val) ? val : (typeof val === 'string' && val.trim().startsWith('[') ? JSON.parse(val) : (val ? [val] : []));
         setFormPatient({
           id: p.id,
           clinicId: p.clinicId,
@@ -74,7 +74,8 @@ function App() {
           allergies: safeArr(p.allergies),
           pastSurgeries: safeArr(p.pastSurgeries),
           chronicDiseases: safeArr(p.chronicDiseases),
-          doctorNotes: safeObj(p.doctorNotes),
+          doctorNotesList: safeNotesArr(p.doctorNotes),
+          doctorNotes: Array.isArray(p.doctorNotes) && p.doctorNotes.length > 0 ? p.doctorNotes[p.doctorNotes.length - 1] : { visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' },
           labTests: safeArr(p.labTests),
         });
         setEditingIdx(0);
