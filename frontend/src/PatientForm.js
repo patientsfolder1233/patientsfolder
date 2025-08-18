@@ -93,7 +93,15 @@ function PatientForm({ onSave, patient, onClear }) {
   const handleAddList = (field, value) => {
     if (value) {
       setForm({ ...form, [field]: [...form[field], value] });
-      setInputs({ ...inputs, [field]: '' });
+      // Map field to correct input key
+      let inputKey = '';
+      if (field === 'currentMedications') inputKey = 'medication';
+      else if (field === 'allergies') inputKey = 'allergy';
+      else if (field === 'pastSurgeries') inputKey = 'surgery';
+      else if (field === 'chronicDiseases') inputKey = 'disease';
+      if (inputKey) {
+        setInputs(prev => ({ ...prev, [inputKey]: '' }));
+      }
     }
   };
 
