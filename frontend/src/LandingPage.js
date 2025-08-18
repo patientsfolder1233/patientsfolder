@@ -1,3 +1,5 @@
+// Use environment variable for backend URL
+const API_URL = process.env.REACT_APP_API_URL;
 import React, { useState } from 'react';
 import { Container, Box, Typography, TextField, Button, Paper, Avatar, IconButton, InputAdornment } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -25,7 +27,7 @@ function LandingPage({ onLogin }) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('http://localhost:5000/login', {
+  const res = await fetch(`${API_URL}/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form)

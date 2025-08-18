@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// Use environment variable for backend URL
+const API_URL = process.env.REACT_APP_API_URL;
 import BackToTopButton from './BackToTopButton';
 import axios from 'axios';
 import PatientForm from './PatientForm';
@@ -62,7 +64,7 @@ function App() {
     if (searchName) params.append('name', searchName);
     if (searchDob) params.append('dob', searchDob);
     try {
-      const res = await axios.get('http://localhost:5000/patients?' + params.toString(), {
+  const res = await axios.get(`${API_URL}/patients?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       console.log('DEBUG: Patient data from backend:', res.data);
@@ -132,12 +134,12 @@ function App() {
     let saveMsg = '';
     try {
       if (editingPatient && editingPatient.id) {
-        await axios.put(`http://localhost:5000/patients/${editingPatient.id}`, editingPatient, {
+  await axios.put(`${API_URL}/patients/${editingPatient.id}`, editingPatient, {
           headers: { Authorization: `Bearer ${token}` }
         });
         saveMsg = 'Changes saved successfully!';
       } else {
-        await axios.post('http://localhost:5000/patients', editingPatient, {
+  await axios.post(`${API_URL}/patients`, editingPatient, {
           headers: { Authorization: `Bearer ${token}` }
         });
         saveMsg = 'Patient record created successfully!';
