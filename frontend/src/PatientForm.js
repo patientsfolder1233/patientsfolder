@@ -122,6 +122,24 @@ function PatientForm({ onSave, patient, onClear }) {
     setForm({ ...form, labTests: form.labTests.filter((_, i) => i !== idx) });
   };
 
+  const handleAddDoctorNote = () => {
+    if (inputs.visitDate && inputs.doctorName && inputs.diagnosis && inputs.treatmentPlan) {
+      setForm({
+        ...form,
+        doctorNotesList: [
+          ...(form.doctorNotesList || []),
+          {
+            visitDate: inputs.visitDate,
+            doctorName: inputs.doctorName,
+            diagnosis: inputs.diagnosis,
+            treatmentPlan: inputs.treatmentPlan
+          }
+        ]
+      });
+      setInputs({ ...inputs, visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' });
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     // Validate required fields
@@ -155,13 +173,20 @@ function PatientForm({ onSave, patient, onClear }) {
         date: inputs.labTestDate
       }];
     }
-    // Always include current Doctor's Notes input fields in the saved data
-    const doctorNotes = {
-      visitDate: inputs.visitDate || form.doctorNotes?.visitDate || '',
-      doctorName: inputs.doctorName || form.doctorNotes?.doctorName || '',
-      diagnosis: inputs.diagnosis || form.doctorNotes?.diagnosis || '',
-      treatmentPlan: inputs.treatmentPlan || form.doctorNotes?.treatmentPlan || ''
-    };
+    // Always include all doctor's notes in the saved data
+    let doctorNotesList = Array.isArray(form.doctorNotesList) ? [...form.doctorNotesList] : [];
+    // If there is a new note in the input fields, add it to the list
+    if (inputs.visitDate || inputs.doctorName || inputs.diagnosis || inputs.treatmentPlan) {
+      doctorNotesList = [
+        ...doctorNotesList,
+        {
+          visitDate: inputs.visitDate,
+          doctorName: inputs.doctorName,
+          diagnosis: inputs.diagnosis,
+          treatmentPlan: inputs.treatmentPlan
+        }
+      ];
+    }
     const patientData = {
       id: form.id || '',
       clinicId: form.clinicId || patient?.clinicId || '',
@@ -177,7 +202,7 @@ function PatientForm({ onSave, patient, onClear }) {
       allergies,
       pastSurgeries,
       chronicDiseases,
-      doctorNotes,
+      doctorNotes: doctorNotesList,
       labTests,
     };
     onSave(patientData);
@@ -411,29 +436,7 @@ function PatientForm({ onSave, patient, onClear }) {
             <TextField label="Treatment Plan" name="treatmentPlan" value={inputs.treatmentPlan || ''} onChange={e => setInputs({ ...inputs, treatmentPlan: e.target.value })} fullWidth multiline minRows={3} disabled={readOnly} />
           </Grid>
           <Grid item xs={12} sm={1}>
-            <IconButton color="primary" onClick={() => {
-              if (inputs.visitDate && inputs.doctorName && inputs.diagnosis && inputs.treatmentPlan) {
-                setForm({
-                  ...form,
-                  doctorNotesList: [
-                    ...(form.doctorNotesList || []),
-                    {
-                      visitDate: inputs.visitDate,
-                      doctorName: inputs.doctorName,
-                      diagnosis: inputs.diagnosis,
-                      treatmentPlan: inputs.treatmentPlan
-                    }
-                  ],
-                  doctorNotes: {
-                    visitDate: inputs.visitDate,
-                    doctorName: inputs.doctorName,
-                    diagnosis: inputs.diagnosis,
-                    treatmentPlan: inputs.treatmentPlan
-                  }
-                });
-                setInputs({ ...inputs, visitDate: '', doctorName: '', diagnosis: '', treatmentPlan: '' });
-              }
-            }} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
+            <IconButton color="primary" onClick={handleAddDoctorNote} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
           </Grid>
         </Grid>
         {(form.doctorNotesList && form.doctorNotesList.length > 0 && form.doctorNotesList.some(note => note.visitDate || note.doctorName || note.diagnosis || note.treatmentPlan)) && (
