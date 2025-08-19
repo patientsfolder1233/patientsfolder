@@ -53,7 +53,11 @@ app.post('/login', async (req, res) => {
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-  const token = jwt.sign({ userId: user.id, clinic: user.clinic_name }, process.env.JWT_SECRET, { expiresIn: '1d' });
+  // Include clinic identifier in token when available. Some setups store clinic as a separate id (clinic_id).
+  // Fall back to clinic_name for older setups — server routes will prefer clinicId when present.
+  const tokenPayload = { userId: user.id, clinic: user.clinic_name };
+  if (user.clinic_id !== undefined) tokenPayload.clinicId = user.clinic_id;
+  const token = jwt.sign(tokenPayload, process.env.JWT_SECRET, { expiresIn: '1d' });
   res.json({ token });
 });
 
@@ -74,7 +78,9 @@ function auth(req, res, next) {
 app.put('/patients/:id', auth, async (req, res) => {
   const patientId = req.params.id;
   const p = req.body;
-  const clinic_id = req.user.userId;
+  // Prefer explicit clinicId from the JWT (set server-side during login/registration).
+  // Fallback to userId for backward compatibility with older tokens.
+  const clinic_id = req.user.clinicId || req.user.userId;
   try {
     const result = await pool.query(
       `UPDATE patients SET
@@ -97,7 +103,9 @@ app.put('/patients/:id', auth, async (req, res) => {
 });
 app.post('/patients', auth, async (req, res) => {
   const p = req.body;
-  const clinic_id = req.user.userId;
+  // Prefer explicit clinicId from the JWT (set server-side during login/registration).
+  // Fallback to userId for backward compatibility with older tokens.
+  const clinic_id = req.user.clinicId || req.user.userId;
   try {
     const result = await pool.query(
       `INSERT INTO patients (
@@ -120,7 +128,9 @@ app.post('/patients', auth, async (req, res) => {
 });
 
 app.get('/patients', auth, async (req, res) => {
-  const clinic_id = req.user.userId;
+  // Prefer explicit clinicId from the JWT (set server-side during login/registration).
+  // Fallback to userId for backward compatibility with older tokens.
+  const clinic_id = req.user.clinicId || req.user.userId;
   const { name, dob } = req.query;
   let query = `SELECT * FROM patients WHERE "clinicId" = $1`;
   let params = [clinic_id];

@@ -488,6 +488,7 @@ function App() {
         </Box>
       )}
   {/* Removed table with ID, Name, DOB, Actions from the bottom */}
+      <img src={`${process.env.PUBLIC_URL}/logo.ico`} alt="Clinic logo" style={{ height: 32, width: 32 }} />
       <BackToTopButton show={showTopBtn} onClick={handleScrollToTop} />
     </Container>
   );
