@@ -383,7 +383,10 @@ function App() {
         </Box>
       )}
       <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'stretch', md: 'center' }} mb={1} gap={2}>
-        <Typography variant="h5" fontWeight={700} color="#1976d2" sx={{ mb: { xs: 2, md: 0 } }}>Patient Folder</Typography>
+        <Box display="flex" alignItems="center" gap={1} sx={{ mb: { xs: 2, md: 0 } }}>
+          <img src={`${process.env.PUBLIC_URL}/logo.ico`} alt="Clinic logo" style={{ height: 28, width: 28, objectFit: 'contain' }} />
+          <Typography variant="h5" fontWeight={700} color="#1976d2">Patient Folder</Typography>
+        </Box>
         <Box display="flex" flexDirection={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'stretch', sm: 'center' }} gap={2} width={{ xs: '100%', sm: 'auto' }}>
           <TextField
             label="Search by Full Name"
@@ -488,7 +491,6 @@ function App() {
         </Box>
       )}
   {/* Removed table with ID, Name, DOB, Actions from the bottom */}
-      <img src={`${process.env.PUBLIC_URL}/logo.ico`} alt="Clinic logo" style={{ height: 32, width: 32 }} />
       <BackToTopButton show={showTopBtn} onClick={handleScrollToTop} />
     </Container>
   );
