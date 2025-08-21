@@ -278,8 +278,7 @@ function PatientForm({ onSave, patient, onClear }) {
               fullWidth
               InputProps={{ readOnly }}
               placeholder="mm/dd/yyyy"
-              onFocus={e => { e.target.type = 'date'; }}
-              onBlur={e => { e.target.type = 'text'; }}
+              helperText="Type date as mm/dd/yyyy"
             />
           </Grid>
           <Grid item xs={12}>
@@ -436,8 +435,7 @@ function PatientForm({ onSave, patient, onClear }) {
               fullWidth
               disabled={readOnly}
               placeholder="mm/dd/yyyy"
-              onFocus={e => { e.target.type = 'date'; }}
-              onBlur={e => { e.target.type = 'text'; }}
+              helperText="Type date as mm/dd/yyyy"
             />
           </Grid>
           <Grid item xs={12} sm={3}>
@@ -490,8 +488,7 @@ function PatientForm({ onSave, patient, onClear }) {
               fullWidth
               disabled={readOnly}
               placeholder="mm/dd/yyyy"
-              onFocus={e => { e.target.type = 'date'; }}
-              onBlur={e => { e.target.type = 'text'; }}
+              helperText="Type date as mm/dd/yyyy"
             />
           </Grid>
           <Grid item xs={12} sm={1}>

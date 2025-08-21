@@ -406,8 +406,7 @@ function App() {
             sx={{ minWidth: { xs: '100%', sm: 140 } }}
             fullWidth={true}
             placeholder="mm/dd/yyyy"
-            onFocus={e => { e.target.type = 'date'; }}
-            onBlur={e => { e.target.type = 'text'; }}
+            helperText="Type date as mm/dd/yyyy"
           />
           <Button
             variant="outlined"
