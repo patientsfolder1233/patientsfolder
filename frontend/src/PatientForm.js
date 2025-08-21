@@ -270,13 +270,16 @@ function PatientForm({ onSave, patient, onClear }) {
             <TextField
               label="Date of Birth"
               name="dob"
-              type="date"
+              type="text"
               value={form.dob}
               onChange={handleChange}
               InputLabelProps={{ shrink: true }}
               required
               fullWidth
               InputProps={{ readOnly }}
+              placeholder="mm/dd/yyyy"
+              onFocus={e => { e.target.type = 'date'; }}
+              onBlur={e => { e.target.type = 'text'; }}
             />
           </Grid>
           <Grid item xs={12}>
@@ -426,12 +429,15 @@ function PatientForm({ onSave, patient, onClear }) {
             <TextField
               label="Visit Date"
               name="visitDate"
-              type="date"
+              type="text"
               value={inputs.visitDate || ''}
               onChange={e => setInputs({ ...inputs, visitDate: e.target.value })}
               InputLabelProps={{ shrink: true }}
               fullWidth
               disabled={readOnly}
+              placeholder="mm/dd/yyyy"
+              onFocus={e => { e.target.type = 'date'; }}
+              onBlur={e => { e.target.type = 'text'; }}
             />
           </Grid>
           <Grid item xs={12} sm={3}>
@@ -474,7 +480,19 @@ function PatientForm({ onSave, patient, onClear }) {
             <TextField label="Lab Test Result" size="small" value={inputs.labTestResult} onChange={e => setInputs({ ...inputs, labTestResult: e.target.value })} fullWidth disabled={readOnly} />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField label="Lab Test Date" size="small" type="date" value={inputs.labTestDate} onChange={e => setInputs({ ...inputs, labTestDate: e.target.value })} InputLabelProps={{ shrink: true }} fullWidth disabled={readOnly} />
+            <TextField
+              label="Lab Test Date"
+              size="small"
+              type="text"
+              value={inputs.labTestDate}
+              onChange={e => setInputs({ ...inputs, labTestDate: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              disabled={readOnly}
+              placeholder="mm/dd/yyyy"
+              onFocus={e => { e.target.type = 'date'; }}
+              onBlur={e => { e.target.type = 'text'; }}
+            />
           </Grid>
           <Grid item xs={12} sm={1}>
             <IconButton color="primary" onClick={handleAddLabTest} disabled={readOnly}><AddCircleOutlineIcon /></IconButton>
