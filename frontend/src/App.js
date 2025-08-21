@@ -400,7 +400,12 @@ function App() {
             label="Search by DOB"
             type="text"
             value={searchDob}
-            onChange={e => setSearchDob(e.target.value)}
+            onChange={e => {
+              let v = e.target.value.replace(/[^0-9]/g, '');
+              if (v.length > 2 && v.length <= 4) v = v.slice(0,2) + '/' + v.slice(2);
+              else if (v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4,8);
+              setSearchDob(v);
+            }}
             size="small"
             InputLabelProps={{ shrink: true }}
             sx={{ minWidth: { xs: '100%', sm: 140 } }}

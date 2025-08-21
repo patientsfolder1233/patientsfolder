@@ -272,7 +272,12 @@ function PatientForm({ onSave, patient, onClear }) {
               name="dob"
               type="text"
               value={form.dob}
-              onChange={handleChange}
+              onChange={e => {
+                let v = e.target.value.replace(/[^0-9]/g, '');
+                if (v.length > 2 && v.length <= 4) v = v.slice(0,2) + '/' + v.slice(2);
+                else if (v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4,8);
+                setForm({ ...form, dob: v });
+              }}
               InputLabelProps={{ shrink: true }}
               required
               fullWidth
@@ -430,7 +435,12 @@ function PatientForm({ onSave, patient, onClear }) {
               name="visitDate"
               type="text"
               value={inputs.visitDate || ''}
-              onChange={e => setInputs({ ...inputs, visitDate: e.target.value })}
+              onChange={e => {
+                let v = e.target.value.replace(/[^0-9]/g, '');
+                if (v.length > 2 && v.length <= 4) v = v.slice(0,2) + '/' + v.slice(2);
+                else if (v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4,8);
+                setInputs({ ...inputs, visitDate: v });
+              }}
               InputLabelProps={{ shrink: true }}
               fullWidth
               disabled={readOnly}
@@ -483,7 +493,12 @@ function PatientForm({ onSave, patient, onClear }) {
               size="small"
               type="text"
               value={inputs.labTestDate}
-              onChange={e => setInputs({ ...inputs, labTestDate: e.target.value })}
+              onChange={e => {
+                let v = e.target.value.replace(/[^0-9]/g, '');
+                if (v.length > 2 && v.length <= 4) v = v.slice(0,2) + '/' + v.slice(2);
+                else if (v.length > 4) v = v.slice(0,2) + '/' + v.slice(2,4) + '/' + v.slice(4,8);
+                setInputs({ ...inputs, labTestDate: v });
+              }}
               InputLabelProps={{ shrink: true }}
               fullWidth
               disabled={readOnly}
