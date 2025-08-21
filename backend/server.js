@@ -4,6 +4,13 @@ import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import fs from 'fs';
+
 
 dotenv.config();
 
@@ -184,6 +191,15 @@ app.get('/patients', auth, async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
+
+// Serve React build only if it exists
+const buildPath = path.join(__dirname, '../frontend/build');
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(buildPath, 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`\u2705 Server running on port ${PORT}`));
