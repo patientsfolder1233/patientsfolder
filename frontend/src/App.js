@@ -398,13 +398,16 @@ function App() {
           />
           <TextField
             label="Search by DOB"
-            type="date"
+            type="text"
             value={searchDob}
             onChange={e => setSearchDob(e.target.value)}
             size="small"
             InputLabelProps={{ shrink: true }}
             sx={{ minWidth: { xs: '100%', sm: 140 } }}
             fullWidth={true}
+            placeholder="mm/dd/yyyy"
+            onFocus={e => { e.target.type = 'date'; }}
+            onBlur={e => { e.target.type = 'text'; }}
           />
           <Button
             variant="outlined"
