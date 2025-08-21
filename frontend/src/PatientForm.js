@@ -438,7 +438,7 @@ function PatientForm({ onSave, patient, onClear }) {
             <TextField label="Doctor Name" name="doctorName" value={inputs.doctorName || ''} onChange={e => setInputs({ ...inputs, doctorName: e.target.value })} fullWidth disabled={readOnly} />
           </Grid>
           <Grid item xs={12} sm={3}>
-            <TextField label="Diagnosis" name="diagnosis" value={inputs.diagnosis || ''} onChange={e => setInputs({ ...inputs, diagnosis: e.target.value })} fullWidth disabled={readOnly} />
+            <TextField label="Diagnosis" name="diagnosis" value={inputs.diagnosis || ''} onChange={e => setInputs({ ...inputs, diagnosis: e.target.value })} fullWidth multiline minRows={3} disabled={readOnly} />
           </Grid>
           <Grid item xs={12} sm={3}>
             <TextField label="Treatment Plan" name="treatmentPlan" value={inputs.treatmentPlan || ''} onChange={e => setInputs({ ...inputs, treatmentPlan: e.target.value })} fullWidth multiline minRows={3} disabled={readOnly} />
